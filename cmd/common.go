@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	at "github.com/hleinders/AnsiTerm"
@@ -52,7 +53,7 @@ func shorten(disable bool, str string) string {
 func doResolve(host string) string {
 	sip, e := net.LookupHost(host)
 	check(e, ErrResolve)
-	return fmt.Sprintf("(%s)", strings.Join(sip, ", "))
+	return strings.Join(sip, ", ")
 }
 
 func getMethodNames() []string {
@@ -73,6 +74,26 @@ func methodNeedsBody(method string) bool {
 	}
 
 	return false
+}
+
+func colorStatus(stat int) string {
+
+	switch statStr := strconv.Itoa(stat); {
+	case stat < 100:
+		return statStr
+	case stat < 200:
+		return at.Cyan(statStr)
+	case stat < 300:
+		return at.Green(statStr)
+	case stat < 400:
+		return at.Yellow(statStr)
+	case stat < 500:
+		return at.Red(statStr)
+	case stat < 600:
+		return at.Magenta(statStr)
+	default:
+		return statStr
+	}
 }
 
 // =================================== HTTP Request Functions ==================================
@@ -120,7 +141,7 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 		rb = strings.NewReader(wr.reqBody)
 	}
 
-	req, err := http.NewRequest(wr.method, wr.url, rb)
+	req, err := http.NewRequest(wr.method, wr.url.String(), rb)
 	if err != nil {
 		return result, err
 	}
@@ -150,16 +171,58 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 		}
 	}
 
-	pr.Debug("*** DEB: Request:\n%+v\n", req)
-	pr.Debug("*** DEB: Cookies:\n%+v\n", client.Jar)
+	pr.Debug("Request:\n%+v\n", req)
+	pr.Debug("Cookies:\n%+v\n", client.Jar)
 
 	// handle request
 	resp, errReq := client.Do(req)
 
-	// build result
-	result.request = *req
-	result.response = *resp
-	result.cookieJar = &client.Jar
+	if errReq == nil {
+		result.request = *req
+		result.response = *resp
+		result.cookieJar = &client.Jar
+	}
 
 	return result, errReq
+}
+
+func follow(wr *WebRequest, cs *ConnectionSetup) ([]WebRequestResult, error) {
+	var resultList []WebRequestResult
+
+	// init client
+	hc := initClient(cs)
+
+	// initial request
+	result, err := doRequest(hc, wr)
+	check(err, ErrRequest)
+
+	// add to list:
+	resultList = append(resultList, result)
+
+	cnt := 0
+	// repeat until no further redirect happens:
+	for result.response.StatusCode >= 301 && result.response.StatusCode <= 399 {
+		// detect next hop:
+		rdURL, e := result.response.Location()
+		check(e, ErrResponse)
+
+		// update the request
+		wr.url = *rdURL
+		wr.method = result.response.Request.Method
+
+		cnt++
+		if cnt >= MaxRedirects {
+			result.response.StatusCode = 999
+			break
+		}
+
+		// next hop:
+		result, err = doRequest(hc, wr)
+		check(err, ErrRequest)
+
+		// add to list:
+		resultList = append(resultList, result)
+	}
+
+	return resultList, err
 }

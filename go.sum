@@ -1,14 +1,10 @@
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
-github.com/fatih/color v1.15.0 h1:kOqh6YHBtK8aywxGerMG2Eq3H6Qgoqeo13Bk2Mv/nBs=
-github.com/fatih/color v1.15.0/go.mod h1:0h5ZqXfHYED7Bhv2ZJamyIOUej9KtShiJESRwBDUSsw=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
 github.com/fatih/color v1.16.0/go.mod h1:fL2Sau1YI5c0pdGEVCbKQbLXB6edEj1ZgiY4NijnWvE=
-github.com/hleinders/AnsiTerm v0.0.0-20230616094027-9f7982c9ce9e h1:DL3g1sguLTpYW4kOUtKqBsiGoZds3i01cAXIWJSN+9Q=
-github.com/hleinders/AnsiTerm v0.0.0-20230616094027-9f7982c9ce9e/go.mod h1:/7ENrOheuWn5KJoheFwa5GaPeDh/+bOCLnSr7cYROX0=
-github.com/hleinders/AnsiTerm v1.0.0 h1:g/JYKdiX7B4QlZZixfhWmAzkZdcc08FxZq+dnjDKSuk=
-github.com/hleinders/AnsiTerm v1.0.0/go.mod h1:/7ENrOheuWn5KJoheFwa5GaPeDh/+bOCLnSr7cYROX0=
-github.com/hleinders/colorprint v0.0.0-20240307102742-677ece0436d0 h1:XLC9tfbuxy2NJd2xUYo28sh+/wRsTYcq3CazrfgXN9s=
-github.com/hleinders/colorprint v0.0.0-20240307102742-677ece0436d0/go.mod h1:HnHs76xDSSI7jBd2BKRgLQvO+SSsjxK/ifXSgCc12bU=
+github.com/hleinders/AnsiTerm v1.0.1 h1:P9jtbudgwOUYPIP3su/xTjmRIUaXKIlxUNcrV3N0dKg=
+github.com/hleinders/AnsiTerm v1.0.1/go.mod h1:/7ENrOheuWn5KJoheFwa5GaPeDh/+bOCLnSr7cYROX0=
+github.com/hleinders/AnsiTerm v1.0.2 h1:C+xOvC2xL0eEoc0rpRPa9oQveFKgb0dqEvSOmBLnF0M=
+github.com/hleinders/AnsiTerm v1.0.2/go.mod h1:/7ENrOheuWn5KJoheFwa5GaPeDh/+bOCLnSr7cYROX0=
 github.com/hleinders/colorprint v1.0.0 h1:sspaDPjyctDTom2QVEvudVxF74JsnQ2wgNHp9igVU8o=
 github.com/hleinders/colorprint v1.0.0/go.mod h1:HnHs76xDSSI7jBd2BKRgLQvO+SSsjxK/ifXSgCc12bU=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
@@ -16,8 +12,6 @@ github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLf
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
-github.com/mattn/go-isatty v0.0.18 h1:DOKFKCQ7FNG2L1rbrmstDN4QVRdS89Nkh85u68Uwp98=
-github.com/mattn/go-isatty v0.0.18/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
 github.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=
 github.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=

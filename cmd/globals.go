@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"time"
 )
 
@@ -13,9 +14,14 @@ const (
 	ErrUndef
 	ErrNoArg
 	ErrCookieJar
+	ErrRequest
+	ErrResponse
 	ErrResolve
 	ErrGetFlag
 	ErrTimeFmt
+	ErrNoURL
+	ErrFileIO
+	ErrNoFile
 )
 
 const (
@@ -41,7 +47,7 @@ type ConnectionSetup struct {
 }
 
 type WebRequest struct {
-	url       string
+	url       url.URL
 	agent     string
 	lang      string
 	method    string
@@ -52,8 +58,8 @@ type WebRequest struct {
 	cookieLst []*http.Cookie
 }
 
-func (r *WebRequest) str() string {
-	return fmt.Sprintf("%s (%s)", r.url, r.method)
+func (r WebRequest) String() string {
+	return fmt.Sprintf("%s (%s)", r.url.String(), r.method)
 }
 
 type WebRequestResult struct {
@@ -62,8 +68,18 @@ type WebRequestResult struct {
 	cookieJar *http.CookieJar
 }
 
-func (r *WebRequestResult) str() string {
+func (r WebRequestResult) String() string {
 	return fmt.Sprintf("%s (%s)", r.request.URL.String(), r.response.Status)
+}
+
+func (r WebRequestResult) GetRequest() string {
+	reqStr := r.request.URL.String()
+
+	if rootFlags.resolve {
+		reqStr = fmt.Sprintf("%s (%s)", reqStr, doResolve(r.request.URL.Hostname()))
+	}
+
+	return reqStr
 }
 
 var AllowedHttpMethods = []RequestMethod{
@@ -79,6 +95,14 @@ var AllowedHttpMethods = []RequestMethod{
 }
 
 var (
-	agentString  = "Golang Request Checker v" + AppVersion
-	rqHeaderDone = false
+	agentString       = "Golang Request Checker v" + AppVersion
+	rqHeaderDone      = false
+	globalRequestBody string
+	globalCcookieLst  []*http.Cookie
+	hcont             string
+	corner            string
+	vbar              string
+	htab              string
+	indentHeader      string
+	rarrow            string
 )
