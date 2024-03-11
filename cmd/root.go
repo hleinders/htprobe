@@ -40,7 +40,7 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "rqcheck",
+	Use:     "htprobe",
 	Version: AppVersion,
 	Short:   "A http request analyzing and debugging tool",
 	Long: `A longer description that spans multiple lines and likely contains

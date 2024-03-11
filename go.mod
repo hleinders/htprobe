@@ -1,4 +1,4 @@
-module github.com/hleinders/rqcheck
+module github.com/hleinders/htprobe
 
 go 1.22.1
 
