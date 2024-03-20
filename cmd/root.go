@@ -6,7 +6,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"net/http"
 	"net/http/cookiejar"
 	"os"
 	"strings"
@@ -15,20 +14,19 @@ import (
 	"github.com/fatih/color"
 	at "github.com/hleinders/AnsiTerm"
 	cp "github.com/hleinders/colorprint"
+	"golang.org/x/net/publicsuffix"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/net/publicsuffix"
 )
 
 type RootFlags struct {
-	debug, verbose          bool
-	noColor, noFancy, ascii bool
-	resolve, full           bool
-	agent, reqLang          string
-	authUser, authPass      string
-	cookie, cookieFile      string
-	httpMethod, bodyFile    string
-	bodyValues, xtraHeaders []string
+	debug, verbose                        bool
+	noColor, noFancy, ascii               bool
+	resolve, long                         bool
+	agent, reqLang, httpMethod            string
+	authUser, authPass                    string
+	cookieFile, bodyFile, headerFile      string
+	cookieValues, bodyValues, xtraHeaders []string
 }
 
 var (
@@ -73,7 +71,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noFancy, "no-fancy", false, "combines no color and ascii mode")
 	rootCmd.PersistentFlags().BoolVarP(&connSet.trust, "trust", "t", false, "trust selfsigned certificates")
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.resolve, "resolve", false, "resolve host names")
-	rootCmd.PersistentFlags().BoolVarP(&rootFlags.full, "full", "f", false, "show results uncut (header, cookies etc.)")
+	rootCmd.PersistentFlags().BoolVarP(&rootFlags.long, "long", "l", false, "long output, don't shorten results (header, cookies etc.)")
 	rootCmd.PersistentFlags().BoolVarP(&connSet.acceptCookies, "accept-cookies", "a", false, "accept response cookies")
 
 	// Parameter
@@ -82,13 +80,14 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&rootFlags.agent, "agent", agentString, "user agent")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.reqLang, "lang", "L", "", "set `language` header for request")
 	rootCmd.PersistentFlags().StringVarP(&connSet.proxy, "proxy", "P", "", "set `host` as proxy")
-	rootCmd.PersistentFlags().IntVarP(&connTimeout, "timeout", "T", DefaultConnectionTimeout, "conn. `time`out in seconds (0=disable, <=3600)")
+	rootCmd.PersistentFlags().IntVarP(&connTimeout, "timeout", "T", DefaultConnectionTimeout, "connection `time`out in seconds (0=disable, <=3600)")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.httpMethod, "method", "m", "GET", "http request `method` (see RFC 7231 section 4.3.)")
-	rootCmd.PersistentFlags().StringVar(&rootFlags.cookie, "cookie", "", "set request cookie (fmt: `name:value`)")
-	rootCmd.PersistentFlags().StringVar(&rootFlags.cookieFile, "cookie-file", "", "read cookies from `file` (fmt: lines of 'name:value')")
-	rootCmd.PersistentFlags().StringVarP(&rootFlags.bodyFile, "body-file", "B", "", "read request body from `file`")
+	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.cookieValues, "cookie", "c", nil, "set request cookie (fmt: `name:value`)\n(Can be used multiple times)")
+	rootCmd.PersistentFlags().StringVarP(&rootFlags.cookieFile, "cookie-file", "C", "", "read cookies from `file` (fmt: lines of 'name:value')")
 	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.bodyValues, "body", "b", nil, "add `entry` to request body where needed (e.g. POST)\n(Can be used multiple times)")
-	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.xtraHeaders, "add-header", "A", nil, "pass `header` to request (fmt: 'Name: Value')\n(Can be used multiple times)")
+	rootCmd.PersistentFlags().StringVarP(&rootFlags.bodyFile, "body-file", "B", "", "read request body from `file`")
+	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.xtraHeaders, "header", "r", nil, "pass `header` to request (fmt: 'Name: Value')\n(Can be used multiple times)")
+	rootCmd.PersistentFlags().StringVarP(&rootFlags.headerFile, "header-file", "R", "", "read extra request headers from `file` (fmt: lines of 'name:value')")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
@@ -99,7 +98,7 @@ func init() {
 
 func PersistentPreRun(cmd *cobra.Command, args []string) {
 	var err error
-	var cookieStringList, bodyList []string
+	var cookieStringList, bodyList, headerStringList []string
 
 	// handle fancy stuff
 	color.NoColor = rootFlags.noColor || at.NoColor()
@@ -114,7 +113,7 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 	corner = at.FrameCloseL + at.FrameHLine + at.FrameHLine
 	vbar = at.FrameVLine
 	htab = strings.Repeat(" ", 7)
-	indentHeader = strings.Repeat(" ", 1)
+	indentHeader = strings.Repeat(" ", 2)
 	rarrow = at.Harrow
 
 	// init printer
@@ -129,9 +128,35 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 		check(err, ErrCookieJar)
 	}
 
-	// Handle request cookies and request body:
-	if rootFlags.cookie != "" {
-		cookieStringList = append(cookieStringList, rootFlags.cookie)
+	//
+	// Handle request headers:
+	if rootFlags.xtraHeaders != nil {
+		headerStringList = append(cookieStringList, rootFlags.xtraHeaders...)
+	}
+
+	if rootFlags.headerFile != "" {
+		if cf, err0 := os.Open(rootFlags.headerFile); err0 == nil {
+			defer cf.Close()
+
+			r := bufio.NewScanner(cf)
+			for r.Scan() {
+				headerStringList = append(headerStringList, r.Text())
+			}
+
+			if err1 := r.Err(); err1 != nil {
+				check(err1, ErrFileIO)
+			}
+		} else {
+			check(err0, ErrNoFile)
+		}
+	}
+	globalHeaderList = headerStringList
+	pr.Debug("Request headers from flags: \n%s\n", globalCookieLst)
+
+	//
+	// Handle request cookies:
+	if rootFlags.cookieValues != nil {
+		cookieStringList = append(cookieStringList, rootFlags.cookieValues...)
 	}
 
 	if rootFlags.cookieFile != "" {
@@ -153,18 +178,18 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 
 	if len(cookieStringList) > 0 {
 		for _, ci := range cookieStringList {
-			r := strings.SplitN(ci, ":", 2)
-			if len(r) != 2 {
+			c, err := getCookieFromString(ci)
+			if err != nil {
 				continue
-			} else {
-				c := http.Cookie{Name: r[0], Value: r[1]}
-				globalCcookieLst = append(globalCcookieLst, &c)
 			}
+
+			globalCookieLst = append(globalCookieLst, &c)
 		}
 	}
-	pr.Debug("Request cookies: \n%s\n", globalCcookieLst)
+	pr.Debug("Request cookies from flags: \n%s\n", globalCookieLst)
 
-	// Handle request body
+	//
+	// Handle request body:
 	if rootFlags.bodyValues != nil {
 		bodyList = append(bodyList, rootFlags.bodyValues...)
 	}
@@ -187,5 +212,5 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 	}
 
 	globalRequestBody = strings.Join(bodyList, "\n")
-	pr.Debug("Request body: \n%s\n", globalRequestBody)
+	pr.Debug("Request body from flags: \n%s\n", globalRequestBody)
 }

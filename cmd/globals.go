@@ -6,6 +6,8 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"time"
+
+	at "github.com/hleinders/AnsiTerm"
 )
 
 // Return values
@@ -65,7 +67,7 @@ func (r WebRequest) String() string {
 type WebRequestResult struct {
 	request   http.Request
 	response  http.Response
-	cookieJar *http.CookieJar
+	cookieLst []*http.Cookie
 }
 
 func (r WebRequestResult) String() string {
@@ -80,6 +82,18 @@ func (r WebRequestResult) GetRequest() string {
 	}
 
 	return reqStr
+}
+
+func (r WebRequestResult) PrettyPrintFirst() string {
+	return fmt.Sprintf(at.Bold("URL: %s  [%s]"), r.GetRequest(), r.request.Method)
+}
+
+func (r WebRequestResult) PrettyPrintNormal(lastStatusCode int) string {
+	return fmt.Sprintf("%s%s (%s) %s  [%s] %s", htab, hcont, colorStatus(lastStatusCode), rarrow, r.request.Method, r.GetRequest())
+}
+
+func (r WebRequestResult) PrettyPrintLast() string {
+	return fmt.Sprintf("%s%s (%s) %s  %s", htab, corner, colorStatus(r.response.StatusCode), rarrow, r.response.Status)
 }
 
 var AllowedHttpMethods = []RequestMethod{
@@ -98,7 +112,8 @@ var (
 	agentString       = "Golang Request Checker v" + AppVersion
 	rqHeaderDone      = false
 	globalRequestBody string
-	globalCcookieLst  []*http.Cookie
+	globalHeaderList  []string
+	globalCookieLst   []*http.Cookie
 	hcont             string
 	corner            string
 	vbar              string

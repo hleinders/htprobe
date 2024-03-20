@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -96,6 +97,51 @@ func colorStatus(stat int) string {
 	}
 }
 
+func stripColorCodes(str string) string {
+	const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+
+	var re = regexp.MustCompile(ansi)
+
+	return re.ReplaceAllString(str, "")
+}
+
+// This function parses an string of the form "name: value" to a cookie
+func getCookieFromString(raw string) (http.Cookie, error) {
+	var c http.Cookie
+	var err error
+
+	r := strings.SplitN(raw, ":", 2)
+	if len(r) == 2 {
+		c = http.Cookie{Name: strings.TrimSpace(r[0]), Value: strings.TrimSpace(r[1])}
+	} else {
+		err = fmt.Errorf("could not parse: %s", raw)
+	}
+
+	return c, err
+}
+
+func deleteCookieFromList(cookie *http.Cookie, list []*http.Cookie) []*http.Cookie {
+	var result []*http.Cookie
+
+	for _, c := range list {
+		if c.Name != cookie.Name {
+			result = append(result, c)
+		}
+	}
+
+	return result
+}
+
+func findCookieInList(cookie *http.Cookie, list []*http.Cookie) bool {
+	for _, c := range list {
+		if c.Name == cookie.Name {
+			return true
+		}
+	}
+
+	return false
+}
+
 // =================================== HTTP Request Functions ==================================
 func initClient(cs *ConnectionSetup) *http.Client {
 	var rdf func(req *http.Request, via []*http.Request) error
@@ -180,7 +226,14 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 	if errReq == nil {
 		result.request = *req
 		result.response = *resp
-		result.cookieJar = &client.Jar
+		result.cookieLst = client.Jar.Cookies(resp.Request.URL)
+	}
+
+	// check if cookie went to jar:
+	for _, c := range result.cookieLst {
+		if findCookieInList(c, wr.cookieLst) {
+			wr.cookieLst = deleteCookieFromList(c, wr.cookieLst)
+		}
 	}
 
 	return result, errReq
@@ -223,6 +276,22 @@ func follow(wr *WebRequest, cs *ConnectionSetup) ([]WebRequestResult, error) {
 		// add to list:
 		resultList = append(resultList, result)
 	}
+
+	return resultList, err
+}
+
+func noFollow(wr *WebRequest, cs *ConnectionSetup) ([]WebRequestResult, error) {
+	var resultList []WebRequestResult
+
+	// init client
+	hc := initClient(cs)
+
+	// initial and only request
+	result, err := doRequest(hc, wr)
+	check(err, ErrRequest)
+
+	// add to list:
+	resultList = append(resultList, result)
 
 	return resultList, err
 }

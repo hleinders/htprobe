@@ -17,7 +17,7 @@ type RedirectFlags struct {
 	allHops                               bool
 	showContent, showCert                 bool
 	showCookies                           bool
-	unsorted, showCookiesDetails          bool
+	showCookiesDetails                    bool
 	displaySingleHeader                   []string
 }
 
@@ -25,9 +25,10 @@ var redirectFlags RedirectFlags
 
 // redirectsCmd represents the redirects command
 var redirectsCmd = &cobra.Command{
-	Use:   "redirects <URL>",
-	Args:  cobra.MinimumNArgs(1),
-	Short: "Follows and shows the redirect chain of a http request",
+	Use:     "redirects <URL>",
+	Args:    cobra.MinimumNArgs(1),
+	Aliases: []string{"rd", "redir"},
+	Short:   "Follows and shows the redirect chain of a http request",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -48,18 +49,22 @@ func init() {
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showCert, "show-cert", "C", false, "show certificate(s)")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseHeader, "response-header", "R", false, "show all response header")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestHeader, "request-header", "Q", false, "show all request header")
-	redirectsCmd.Flags().BoolVar(&redirectFlags.unsorted, "no-sort", false, "do not sort header")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showContent, "show-content", "O", false, "show content of last hop\n(prints to stderr)")
 	redirectsCmd.Flags().BoolVar(&redirectFlags.allHops, "all", false, "show all details in every hop")
 
 	// Parameter
-	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleHeader, "header", "H", nil, "show response `header`\n(Can be used multiple times)")
+	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleHeader, "header", "H", nil, "show only response header `FOOBAR`\n(Can be used multiple times)")
 
 	// details imply showing
 	redirectFlags.showCookies = redirectFlags.showCookies || redirectFlags.showCookiesDetails
+
+	// SingleHeader implies show ResponseHeaders:
+	redirectFlags.showResponseHeader = redirectFlags.showResponseHeader || redirectsCmd.Flags().Changed("header")
 }
 
 func ExecRedirects(cmd *cobra.Command, args []string) {
+	var hops []WebRequestResult
+
 	// create template request:
 	req := WebRequest{
 		agent:     rootFlags.agent,
@@ -68,8 +73,8 @@ func ExecRedirects(cmd *cobra.Command, args []string) {
 		authUser:  rootFlags.authUser,
 		authPass:  rootFlags.authPass,
 		reqBody:   globalRequestBody,
-		xhdrs:     rootFlags.xtraHeaders,
-		cookieLst: globalCcookieLst,
+		xhdrs:     globalHeaderList,
+		cookieLst: globalCookieLst,
 	}
 
 	for _, rawURL := range args {
@@ -89,42 +94,61 @@ func ExecRedirects(cmd *cobra.Command, args []string) {
 		newReq.url = *newURL
 
 		// handle the request
-		hops, err := follow(&newReq, &connSet)
+		hops, err = follow(&newReq, &connSet)
 		if err != nil {
 			pr.Error(err.Error())
 		}
 
 		// display results
-		printChain(hops)
+		prettyPrintChain(hops)
 		fmt.Println()
 	}
 }
 
-func printChain(resultList []WebRequestResult) {
+func prettyPrintChain(resultList []WebRequestResult) {
 	var lastStatusCode int
-	var lastStatus string
+	// var lastStatus string
 
-	numItems := len(resultList)
+	numItem := len(resultList) - 1
 
 	// handle first item:
 	first := resultList[0]
-	fmt.Printf(at.Bold("URL: %s  [%s]\n"), first.GetRequest(), first.request.Method)
+	fmt.Println(first.PrettyPrintFirst())
+
+	rdHandleHeaders(first, redirectFlags.allHops)
+	rqHeaderDone = true
 
 	// remember status
 	lastStatusCode = first.response.StatusCode
-	lastStatus = first.response.Status
 
 	// no do the remaining
-	if numItems > 1 {
-		for _, h := range resultList[1:] {
-			fmt.Printf("%s%s (%s) %s  [%s] %s\n", htab, hcont, colorStatus(lastStatusCode), rarrow, h.request.Method, h.GetRequest())
+	if numItem > 1 {
+		for i, h := range resultList[1:] {
+			fmt.Println(h.PrettyPrintNormal(lastStatusCode))
+
+			showResponse := (i == numItem-1) || redirectFlags.allHops
+			rdHandleHeaders(h, showResponse)
 
 			lastStatusCode = h.response.StatusCode
-			lastStatus = h.response.Status
 		}
 	}
 
 	// last status:
-	fmt.Printf("%s%s (%s) %s  %s\n", htab, corner, colorStatus(lastStatusCode), rarrow, lastStatus)
+	fmt.Println(resultList[numItem].PrettyPrintLast())
+}
 
+func rdHandleHeaders(result WebRequestResult, showRespons bool) {
+	// Request headers: May only occour on first hop
+	if redirectFlags.showRequestHeader && !rqHeaderDone {
+		chainPrintHeaders(htab, vbar, at.BulletChar, "Request Header:", result.request.Header)
+	}
+
+	// Response Headers: May occour in all hops or only at last hop
+	if redirectFlags.showResponseHeader && showRespons {
+		if len(redirectFlags.displaySingleHeader) == 0 {
+			chainPrintHeaders(htab, vbar, at.BulletChar, "Response Header:", result.response.Header)
+		} else {
+			chainPrintHeaders(htab, vbar, at.BulletChar, "Selected Headers:", makeHeadersFromName(redirectFlags.displaySingleHeader, result.response.Header))
+		}
+	}
 }
