@@ -5,8 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
-	"regexp"
 
 	at "github.com/hleinders/AnsiTerm"
 	"github.com/spf13/cobra"
@@ -64,6 +62,7 @@ func init() {
 
 func ExecRedirects(cmd *cobra.Command, args []string) {
 	var hops []WebRequestResult
+	var err error
 
 	// create template request:
 	req := WebRequest{
@@ -78,20 +77,9 @@ func ExecRedirects(cmd *cobra.Command, args []string) {
 	}
 
 	for _, rawURL := range args {
-		// has arg a protocol?
-		rx := regexp.MustCompile(`(?i)^https?://`)
-		if !rx.Match([]byte(rawURL)) {
-			pr.Debug("Added protocol prefix to %s.\n", rawURL)
-			rawURL = "http://" + rawURL
-		}
-
-		// is arg an url?
-		pr.Debug("Raw URL: %s\n", rawURL)
-		newURL, err := url.ParseRequestURI(rawURL)
-		check(err, ErrNoURL)
-
 		newReq := req
-		newReq.url = *newURL
+		newReq.url, err = checkURL(rawURL)
+		check(err, ErrNoURL)
 
 		// handle the request
 		hops, err = follow(&newReq, &connSet)

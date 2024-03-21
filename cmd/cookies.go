@@ -6,8 +6,6 @@ package cmd
 import (
 	"fmt"
 	"net/http"
-	"net/url"
-	"regexp"
 	"strings"
 
 	at "github.com/hleinders/AnsiTerm"
@@ -23,8 +21,10 @@ var cookieFlags CookieFlags
 
 // cookiesCmd represents the cookies command
 var cookiesCmd = &cobra.Command{
-	Use:   "cookies",
-	Short: "A brief description of your command",
+	Use:     "cookies",
+	Args:    cobra.MinimumNArgs(1),
+	Aliases: []string{"ck", "cookie"},
+	Short:   "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -49,6 +49,7 @@ func init() {
 
 func ExecCookies(cmd *cobra.Command, args []string) {
 	var hops []WebRequestResult
+	var err error
 
 	// create template request:
 	req := WebRequest{
@@ -63,20 +64,9 @@ func ExecCookies(cmd *cobra.Command, args []string) {
 	}
 
 	for _, rawURL := range args {
-		// has arg a protocol?
-		rx := regexp.MustCompile(`(?i)^https?://`)
-		if !rx.Match([]byte(rawURL)) {
-			pr.Debug("Added protocol prefix to %s.\n", rawURL)
-			rawURL = "http://" + rawURL
-		}
-
-		// is arg an url?
-		pr.Debug("Raw URL: %s\n", rawURL)
-		newURL, err := url.ParseRequestURI(rawURL)
-		check(err, ErrNoURL)
-
 		newReq := req
-		newReq.url = *newURL
+		newReq.url, err = checkURL(rawURL)
+		check(err, ErrNoURL)
 
 		// handle the request(s)
 		if cookieFlags.follow {
@@ -91,6 +81,7 @@ func ExecCookies(cmd *cobra.Command, args []string) {
 			}
 
 		}
+
 		// display results
 		prettyPrintCookies(hops)
 	}
@@ -133,26 +124,6 @@ func fullCookieValues(c *http.Cookie) string {
 	if c.Domain != "" {
 		fv = fmt.Sprintf("%s; domain=%s", fv, c.Domain)
 	}
-
-	// if c.Expires.String() != "" {
-	// 	fv = fmt.Sprintf("%s; expires=%s", fv, c.Expires.String())
-	// }
-
-	// if c.MaxAge != 0 {
-	// 	fv = fmt.Sprintf("%s; maxage=%d", fv, c.MaxAge)
-	// }
-
-	// if c.Secure {
-	// 	fv = fmt.Sprintf("%s; secure=%t", fv, c.Secure)
-	// }
-
-	// if c.HttpOnly {
-	// 	fv = fmt.Sprintf("%s; httponly=%t", fv, c.HttpOnly)
-	// }
-
-	// if c.SameSite  {
-	// 	fv = fmt.Sprintf("%s; samesite=%d", fv, c.SameSite)
-	// }
 
 	return fv
 }

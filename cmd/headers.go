@@ -6,8 +6,6 @@ package cmd
 import (
 	"fmt"
 	"net/http"
-	"net/url"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -51,6 +49,7 @@ func init() {
 
 func ExecHeaders(cmd *cobra.Command, args []string) {
 	var hops []WebRequestResult
+	var err error
 
 	// create template request:
 	req := WebRequest{
@@ -65,20 +64,9 @@ func ExecHeaders(cmd *cobra.Command, args []string) {
 	}
 
 	for _, rawURL := range args {
-		// has arg a protocol?
-		rx := regexp.MustCompile(`(?i)^https?://`)
-		if !rx.Match([]byte(rawURL)) {
-			pr.Debug("Added protocol prefix to %s.\n", rawURL)
-			rawURL = "http://" + rawURL
-		}
-
-		// is arg an url?
-		pr.Debug("Raw URL: %s\n", rawURL)
-		newURL, err := url.ParseRequestURI(rawURL)
-		check(err, ErrNoURL)
-
 		newReq := req
-		newReq.url = *newURL
+		newReq.url, err = checkURL(rawURL)
+		check(err, ErrNoURL)
 
 		// handle the request(s)
 		if headerFlags.follow {
@@ -93,6 +81,7 @@ func ExecHeaders(cmd *cobra.Command, args []string) {
 			}
 
 		}
+
 		// display results
 		prettyPrintHeaders(hops)
 	}

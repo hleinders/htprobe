@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	at "github.com/hleinders/AnsiTerm"
 )
@@ -95,6 +96,22 @@ func colorStatus(stat int) string {
 	default:
 		return statStr
 	}
+}
+
+func colorValidity(validUntil time.Time) string {
+	now := time.Now()
+	diff := validUntil.Sub(now).Hours() / 24
+	str := validUntil.String()
+
+	if diff < 0 {
+		return at.Red(str)
+	}
+
+	if diff < 30 {
+		return at.Yellow(str)
+	}
+
+	return at.Green(str)
 }
 
 func stripColorCodes(str string) string {
@@ -226,7 +243,9 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 	if errReq == nil {
 		result.request = *req
 		result.response = *resp
-		result.cookieLst = client.Jar.Cookies(resp.Request.URL)
+		if client.Jar != nil {
+			result.cookieLst = client.Jar.Cookies(resp.Request.URL)
+		}
 	}
 
 	// check if cookie went to jar:
@@ -294,4 +313,20 @@ func noFollow(wr *WebRequest, cs *ConnectionSetup) ([]WebRequestResult, error) {
 	resultList = append(resultList, result)
 
 	return resultList, err
+}
+
+func checkURL(rawURL string) (url.URL, error) {
+
+	// has arg a protocol?
+	rx := regexp.MustCompile(`(?i)^https?://`)
+	if !rx.Match([]byte(rawURL)) {
+		pr.Debug("Added protocol prefix to %s.\n", rawURL)
+		rawURL = "http://" + rawURL
+	}
+
+	// is arg an url?
+	pr.Debug("Raw URL: %s\n", rawURL)
+
+	u, e := url.ParseRequestURI(rawURL)
+	return *u, e
 }
