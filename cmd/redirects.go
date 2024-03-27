@@ -96,6 +96,7 @@ func prettyPrintChain(resultList []WebRequestResult) {
 	numItem := len(resultList) - 1
 
 	// handle first item:
+	fmt.Println()
 	first := resultList[0]
 	fmt.Println(first.PrettyPrintFirst())
 

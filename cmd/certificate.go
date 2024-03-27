@@ -221,7 +221,8 @@ func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.C
 // }
 
 func prettyPrintCertificates(resultList []WebRequestResult) {
-	numItem := len(resultList) - 1
+
+	fmt.Println()
 
 	for cnt, h := range resultList {
 
@@ -234,7 +235,4 @@ func prettyPrintCertificates(resultList []WebRequestResult) {
 		displayCertificates(indentHeader, "", at.BulletChar, "Certificate(s):", h.response.TLS)
 		fmt.Println()
 	}
-
-	// last status:
-	resultList[numItem].PrettyPrintLast()
 }

@@ -122,7 +122,8 @@ func chainPrintHeaders(indent, frameChar, mark, titleMsg string, headerList http
 }
 
 func prettyPrintHeaders(resultList []WebRequestResult) {
-	// numItem := len(resultList) - 1
+
+	fmt.Println()
 
 	for cnt, h := range resultList {
 

@@ -145,6 +145,9 @@ func fullCookieValues(c *http.Cookie) string {
 // }
 
 func prettyPrintCookies(resultList []WebRequestResult) {
+
+	fmt.Println()
+
 	for cnt, h := range resultList {
 		// result title
 		title := fmt.Sprintf("%d:  %s (%s)", cnt+1, h.PrettyPrintRedir(cnt), colorStatus(h.response.StatusCode))
