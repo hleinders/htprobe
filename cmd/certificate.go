@@ -18,18 +18,20 @@ type CertificateFlags struct {
 
 var certificateFlags CertificateFlags
 
+var certificateShortDesc = "Analyzes and displays server certificates"
+
 // certificateCmd represents the certificate command
 var certificateCmd = &cobra.Command{
-	Use:     "certificate",
+	Use:     "certificate <URL> [<URL> ...]",
 	Args:    cobra.MinimumNArgs(1),
-	Aliases: []string{"crt", "cert"},
-	Short:   "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Aliases: []string{"ct", "crt", "cert"},
+	Short:   certificateShortDesc,
+	Long: makeHeader("htprobe certificate: "+certificateShortDesc) + `With 'htprobe certificate <URL>' the server certificate of URL
+is shown. If the certifiace is invalid for some reason and the
+connection is declined, you may force the connection with the
+'-t|--trust' flag to force the connection to be trusted.
+You may pass the '-f|--follow' flag to follow redirects. In this case,
+the certificate can be displayed in any hop with the '-a|--all' flag.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecCertificate(cmd, args)
 	},
@@ -82,20 +84,30 @@ func ExecCertificate(cmd *cobra.Command, args []string) {
 	}
 }
 
-func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.ConnectionState) {
+func displayCertificates(indent, frameChar, mark, titleMsg string, tls *tls.ConnectionState) {
 	var msgSAN string
-	// var chain []string
+	var nameFound bool
+	var displayName string
 
 	fmtString := "%s%s   %s\n"
 	fmt.Printf(fmtString, indent, frameChar, at.Bold(titleMsg))
 
 	if tls != nil {
-		// chain := "CA-Chain: "
 		cert := tls.PeerCertificates
 		c0 := cert[0]
-		commonName := c0.Subject.CommonName
+		commonName := strings.ToLower(strings.TrimSpace(c0.Subject.CommonName))
+		serverName := strings.ToLower(strings.TrimSpace(tls.ServerName))
 		subjectANs := c0.DNSNames
 		validUntil := c0.NotAfter
+
+		displayName = commonName
+		if commonName == serverName {
+			displayName = at.Green(commonName)
+			nameFound = true
+		} else if found := findInSlice(subjectANs, serverName); found {
+			subjectANs = markGreenInSlice(subjectANs, serverName)
+			nameFound = true
+		}
 
 		if len(subjectANs) > 0 {
 			msgSAN = strings.Join(subjectANs, ", ")
@@ -103,11 +115,16 @@ func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.C
 			msgSAN = "None"
 		}
 
+		if !nameFound {
+			displayName = at.Red(commonName)
+			msgSAN = at.Red(msgSAN)
+		}
+
 		// print cert
-		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s CN:          %s", mark, commonName))
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s CN:          %s", mark, displayName))
 
 		// print sans
-		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  SANs:        %s", msgSAN))
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  SANs:        %s", shorten(rootFlags.long, screenWidth-25, msgSAN)))
 
 		// validity
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Valid until: %s", colorValidity(validUntil)))
@@ -119,6 +136,50 @@ func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.C
 			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("               %s  %s", at.Larrow, c.Subject.CommonName))
 		}
 
+	} else {
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s", mark, "(None)"))
+	}
+
+	fmt.Printf("%s%s\n", indent, frameChar)
+}
+
+func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.ConnectionState) {
+	var msgSAN, msgCaChain string
+	var caChain []string
+
+	fmtString := "%s%s   %s\n"
+	fmt.Printf(fmtString, indent, frameChar, at.Bold(titleMsg))
+
+	if tls != nil {
+		cert := tls.PeerCertificates
+		c0 := cert[0]
+		commonName := strings.ToLower(strings.TrimSpace(c0.Subject.CommonName))
+		subjectANs := c0.DNSNames
+		validUntil := c0.NotAfter
+
+		for _, c := range cert {
+			caChain = append(caChain, c.Subject.CommonName)
+		}
+
+		msgCaChain = strings.Join(caChain, " <<< ")
+
+		if len(subjectANs) > 0 {
+			msgSAN = strings.Join(subjectANs, ", ")
+		} else {
+			msgSAN = "None"
+		}
+
+		// print cert
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s CN:          %s", mark, commonName))
+
+		// print sans
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  SANs:        %s", shorten(rootFlags.long, screenWidth-20, msgSAN)))
+
+		// validity
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Valid until: %s", colorValidity(validUntil)))
+
+		// print chain
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  CA-Chain:    %s", shorten(rootFlags.long, screenWidth-20, msgCaChain)))
 	} else {
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s", mark, "(None)"))
 	}
@@ -162,16 +223,15 @@ func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.C
 func prettyPrintCertificates(resultList []WebRequestResult) {
 	numItem := len(resultList) - 1
 
-	for _, h := range resultList {
+	for cnt, h := range resultList {
 
-		title := fmt.Sprintf("%s (%s)", h.PrettyPrintFirst(), colorStatus(h.response.StatusCode))
+		title := fmt.Sprintf("%d:  %s (%s)", cnt+1, h.PrettyPrintRedir(cnt), colorStatus(h.response.StatusCode))
 		titleLen := len(stripColorCodes(title))
 
 		fmt.Println(title)
 		fmt.Println(strings.Repeat(at.FrameOHLine, titleLen))
 		fmt.Println()
-		chainPrintCertificates(indentHeader, "", at.BulletChar, "Certificate(s):", h.response.TLS)
-		// chainPrintCertificatesChain(indentHeader, "", "", "Certificate(s):", h.response.TLS)
+		displayCertificates(indentHeader, "", at.BulletChar, "Certificate(s):", h.response.TLS)
 		fmt.Println()
 	}
 

@@ -24,6 +24,7 @@ const (
 	ErrNoURL
 	ErrFileIO
 	ErrNoFile
+	ErrNoMethod
 )
 
 const (
@@ -88,6 +89,14 @@ func (r WebRequestResult) PrettyPrintFirst() string {
 	return fmt.Sprintf(at.Bold("URL: %s  [%s]"), r.GetRequest(), r.request.Method)
 }
 
+func (r WebRequestResult) PrettyPrintRedir(num int) string {
+	if num == 0 {
+		return r.PrettyPrintFirst()
+	}
+
+	return at.Yellow("Redirect to: ") + fmt.Sprintf(at.Bold("%s  [%s]"), r.GetRequest(), r.request.Method)
+}
+
 func (r WebRequestResult) PrettyPrintNormal(lastStatusCode int) string {
 	return fmt.Sprintf("%s%s (%s) %s  [%s] %s", htab, hcont, colorStatus(lastStatusCode), rarrow, r.request.Method, r.GetRequest())
 }
@@ -111,6 +120,7 @@ var AllowedHttpMethods = []RequestMethod{
 var (
 	agentString       = "Golang Request Checker v" + AppVersion
 	rqHeaderDone      = false
+	rqCookiesDone     = false
 	globalRequestBody string
 	globalHeaderList  []string
 	globalCookieLst   []*http.Cookie
@@ -120,4 +130,5 @@ var (
 	htab              string
 	indentHeader      string
 	rarrow            string
+	screenWidth       int
 )

@@ -20,18 +20,17 @@ type HeaderFlags struct {
 
 var headerFlags HeaderFlags
 
+var headerShortDesc = "Shows the request and response headers of a http request"
+
 // headersCmd represents the headers command
 var headersCmd = &cobra.Command{
-	Use:     "headers <URL>",
+	Use:     "headers <URL> [<URL> ...]",
 	Args:    cobra.MinimumNArgs(1),
-	Aliases: []string{"hd", "head"},
-	Short:   "Follows and shows the redirect chain of a http request",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Aliases: []string{"hd", "hdr", "head"},
+	Short:   headerShortDesc,
+	Long: makeHeader("htprobe headers: "+headerShortDesc) + `With 'htprobe headers <URL>' all request and response headers
+are shown. You may pass the '-f|--follow' flag to follow redirects.
+In this case, the headers can be displayed in any hop with the '-a|--all' flag.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecHeaders(cmd, args)
 	},
@@ -104,7 +103,6 @@ func makeHeadersFromName(names []string, headers http.Header) http.Header {
 }
 
 func chainPrintHeaders(indent, frameChar, mark, titleMsg string, headerList http.Header) {
-	var headerVal string
 	var headerKeys []string
 
 	fmtString := "%s%s   %s\n"
@@ -117,18 +115,18 @@ func chainPrintHeaders(indent, frameChar, mark, titleMsg string, headerList http
 	sort.Strings(headerKeys)
 
 	for _, h := range headerKeys {
-		headerVal = strings.Join(headerList.Values(h), ", ")
-		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s: %s", mark, h, shorten(rootFlags.long, headerVal)))
+		headerStr := fmt.Sprintf("%s: %s", h, strings.Join(headerList.Values(h), ", "))
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s", mark, shorten(rootFlags.long, screenWidth-20, headerStr)))
 	}
 	fmt.Printf("%s%s\n", indent, frameChar)
 }
 
 func prettyPrintHeaders(resultList []WebRequestResult) {
-	numItem := len(resultList) - 1
+	// numItem := len(resultList) - 1
 
-	for _, h := range resultList {
+	for cnt, h := range resultList {
 
-		title := fmt.Sprintf("%s (%s)", h.PrettyPrintFirst(), colorStatus(h.response.StatusCode))
+		title := fmt.Sprintf("%d:  %s (%s)", cnt+1, h.PrettyPrintRedir(cnt), colorStatus(h.response.StatusCode))
 		titleLen := len(stripColorCodes(title))
 
 		fmt.Println(title)
@@ -137,9 +135,6 @@ func prettyPrintHeaders(resultList []WebRequestResult) {
 		hdHandleHeaders(h)
 		fmt.Println()
 	}
-
-	// last status:
-	resultList[numItem].PrettyPrintLast()
 }
 
 func hdHandleHeaders(result WebRequestResult) {

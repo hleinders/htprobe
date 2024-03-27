@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -21,6 +23,11 @@ func check(e error, rcode int) {
 		fmt.Fprintf(os.Stderr, at.Red("*** Error: %+v\n"), e)
 		os.Exit(rcode)
 	}
+}
+
+func makeHeader(str string) string {
+	// return "\n" + at.Bold(str) + "\n\n"
+	return "\n" + at.Yellow(str) + "\n\n"
 }
 
 func splitFirst(str, sep string) (string, string) {
@@ -44,9 +51,24 @@ func findInSlice(slice []string, str string) bool {
 	return false
 }
 
-func shorten(disable bool, str string) string {
-	if len(str) > MaxHeaderLen && !disable {
-		return str[:MaxHeaderLen-3] + "..."
+func markGreenInSlice(slice []string, str string) []string {
+	var result []string
+	var tmp string
+
+	s := strings.TrimSpace(str)
+	for _, item := range slice {
+		if tmp = strings.TrimSpace(item); tmp == s {
+			tmp = at.Green(tmp)
+		}
+		result = append(result, tmp)
+	}
+
+	return result
+}
+
+func shorten(disable bool, length int, str string) string {
+	if len(str) > length && !disable {
+		return str[:length-3] + "..."
 	}
 
 	return str
@@ -246,6 +268,12 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 		if client.Jar != nil {
 			result.cookieLst = client.Jar.Cookies(resp.Request.URL)
 		}
+	} else {
+		pr.Debug("Error is: %s\n", reflect.TypeOf(errReq))
+		pr.Debug("Error details: %+v\n", errors.Unwrap(errReq))
+		te := errors.Unwrap(errReq)
+		pr.Debug("Unwrapped error is: %s\n", reflect.TypeOf(te))
+		pr.Debug("Unwrapped error details: %+v\n", errors.Unwrap(te))
 	}
 
 	// check if cookie went to jar:

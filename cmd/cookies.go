@@ -19,18 +19,17 @@ type CookieFlags struct {
 
 var cookieFlags CookieFlags
 
+var cookieShortDesc = "Shows the request and response cookies of a http request"
+
 // cookiesCmd represents the cookies command
 var cookiesCmd = &cobra.Command{
-	Use:     "cookies",
+	Use:     "cookies <URL> [<URL> ...]",
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"ck", "cookie"},
-	Short:   "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short:   cookieShortDesc,
+	Long: makeHeader("htprobe cookies: "+cookieShortDesc) + `With 'htprobe cookies <URL>' all request and response cookies
+are shown. You may pass the '-f|--follow' flag to follow redirects.
+In this case, the cookies can be displayed in any hop with the '-a|--all' flag.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecCookies(cmd, args)
 	},
@@ -87,6 +86,18 @@ func ExecCookies(cmd *cobra.Command, args []string) {
 	}
 }
 
+func makeCookiesFromNames(cookieList []*http.Cookie, names []string) []*http.Cookie {
+	var cl []*http.Cookie
+
+	for _, c := range cookieList {
+		cName := c.Name
+		if found := findInSlice(names, cName); found {
+			cl = append(cl, c)
+		}
+	}
+	return cl
+}
+
 func makeCookiesFromResponse(headers http.Header) []*http.Cookie {
 	var cl []*http.Cookie
 
@@ -106,7 +117,8 @@ func chainPrintCookies(indent, frameChar, mark, titleMsg string, cookieList []*h
 
 	if len(cookieList) > 0 {
 		for _, c := range cookieList {
-			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s: %s", mark, c.Name, shorten(rootFlags.long, fullCookieValues(c))))
+			ckStr := fmt.Sprintf("%s: %s", c.Name, fullCookieValues(c))
+			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s", mark, shorten(rootFlags.long, screenWidth-25, ckStr)))
 		}
 	} else {
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s", mark, "(None)"))
@@ -133,12 +145,9 @@ func fullCookieValues(c *http.Cookie) string {
 // }
 
 func prettyPrintCookies(resultList []WebRequestResult) {
-	numItem := len(resultList) - 1
-
-	for _, h := range resultList {
-
+	for cnt, h := range resultList {
 		// result title
-		title := fmt.Sprintf("%s (%s)", h.PrettyPrintFirst(), colorStatus(h.response.StatusCode))
+		title := fmt.Sprintf("%d:  %s (%s)", cnt+1, h.PrettyPrintRedir(cnt), colorStatus(h.response.StatusCode))
 		titleLen := len(stripColorCodes(title))
 
 		fmt.Println(title)
@@ -149,9 +158,6 @@ func prettyPrintCookies(resultList []WebRequestResult) {
 		ckHandleCookies(h)
 		fmt.Println()
 	}
-
-	// last status:
-	resultList[numItem].PrettyPrintLast()
 }
 
 func ckHandleCookies(result WebRequestResult) {
@@ -169,7 +175,7 @@ func ckHandleCookies(result WebRequestResult) {
 		if result.cookieLst != nil {
 			chainPrintCookies(indentHeader, "", at.BulletChar, "Stored Cookies:", result.cookieLst)
 		}
-		// } else {
-		// 	chainPrintHeaders(indentHeader, "", at.BulletChar, "Selected Cookies:", makeCookiesFromName(headerFlags.displaySingleHeader, result.response.Header))
+	} else {
+		chainPrintCookies(indentHeader, "", at.BulletChar, "Selected Cookies:", makeCookiesFromNames(result.cookieLst, cookieFlags.displaySingleCookie))
 	}
 }

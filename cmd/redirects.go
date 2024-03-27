@@ -11,28 +11,27 @@ import (
 )
 
 type RedirectFlags struct {
-	showResponseHeader, showRequestHeader bool
-	allHops                               bool
-	showContent, showCert                 bool
-	showCookies                           bool
-	showCookiesDetails                    bool
-	displaySingleHeader                   []string
+	showResponseHeader, showRequestHeader    bool
+	showResponseCookies, showResponseCert    bool
+	allHops, showContent, showRequestCookies bool
+	displaySingleHeader, displaySingleCookie []string
 }
 
 var redirectFlags RedirectFlags
 
+var redirectShortDesc = "Follows and shows the redirect chain of a http request"
+
 // redirectsCmd represents the redirects command
 var redirectsCmd = &cobra.Command{
-	Use:     "redirects <URL>",
+	Use:     "redirects <URL> [<URL> ...]",
 	Args:    cobra.MinimumNArgs(1),
-	Aliases: []string{"rd", "redir"},
-	Short:   "Follows and shows the redirect chain of a http request",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Aliases: []string{"rd", "redir", "redirect"},
+	Short:   redirectShortDesc,
+	Long: makeHeader("htprobe redirects: "+redirectShortDesc) + `With 'htprobe redirects <URL>', the redirect chain of a http
+request is shown. Every hop of this chain is displayed with the status code.
+If the request is done via SSL and he certifiace is invalid for some reason,
+you may force the connection with the '-t|--trust' flag to force the connection
+to be trusted. You may also display details like headers or cookies.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecRedirects(cmd, args)
 	},
@@ -42,19 +41,17 @@ func init() {
 	rootCmd.AddCommand(redirectsCmd)
 
 	// flags
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showCookies, "show-cookies", "c", false, "show all response cookies")
-	redirectsCmd.Flags().BoolVar(&redirectFlags.showCookiesDetails, "cookie-details", false, "show cookie details")
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showCert, "show-cert", "C", false, "show certificate(s)")
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseHeader, "response-header", "R", false, "show all response header")
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestHeader, "request-header", "Q", false, "show all request header")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseCookies, "show-cookies", "c", false, "show all response cookies")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseCert, "show-cert", "C", false, "show certificate(s)")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseHeader, "response-header", "H", false, "show response header")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestHeader, "request-header", "R", false, "show request header")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestCookies, "request-cookies", "Z", false, "show request header")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showContent, "show-content", "O", false, "show content of last hop\n(prints to stderr)")
-	redirectsCmd.Flags().BoolVar(&redirectFlags.allHops, "all", false, "show all details in every hop")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.allHops, "all", "a", false, "show all details")
 
 	// Parameter
-	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleHeader, "header", "H", nil, "show only response header `FOOBAR`\n(Can be used multiple times)")
-
-	// details imply showing
-	redirectFlags.showCookies = redirectFlags.showCookies || redirectFlags.showCookiesDetails
+	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleHeader, "display-header", "S", nil, "show only response header `FOOBAR`\n(Can be used multiple times)")
+	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleCookie, "display-cookie", "D", nil, "show only response header `FOOBAR`\n(Can be used multiple times)")
 
 	// SingleHeader implies show ResponseHeaders:
 	redirectFlags.showResponseHeader = redirectFlags.showResponseHeader || redirectsCmd.Flags().Changed("header")
@@ -95,7 +92,6 @@ func ExecRedirects(cmd *cobra.Command, args []string) {
 
 func prettyPrintChain(resultList []WebRequestResult) {
 	var lastStatusCode int
-	// var lastStatus string
 
 	numItem := len(resultList) - 1
 
@@ -105,12 +101,13 @@ func prettyPrintChain(resultList []WebRequestResult) {
 
 	rdHandleHeaders(first, redirectFlags.allHops)
 	rqHeaderDone = true
+	rqCookiesDone = true
 
 	// remember status
 	lastStatusCode = first.response.StatusCode
 
 	// no do the remaining
-	if numItem > 1 {
+	if numItem >= 1 {
 		for i, h := range resultList[1:] {
 			fmt.Println(h.PrettyPrintNormal(lastStatusCode))
 
@@ -125,18 +122,38 @@ func prettyPrintChain(resultList []WebRequestResult) {
 	fmt.Println(resultList[numItem].PrettyPrintLast())
 }
 
-func rdHandleHeaders(result WebRequestResult, showRespons bool) {
+func rdHandleHeaders(result WebRequestResult, showResponse bool) {
+	// Request stuff:
 	// Request headers: May only occour on first hop
 	if redirectFlags.showRequestHeader && !rqHeaderDone {
 		chainPrintHeaders(htab, vbar, at.BulletChar, "Request Header:", result.request.Header)
 	}
 
+	if redirectFlags.showRequestCookies && !rqCookiesDone {
+		chainPrintCookies(htab, vbar, at.BulletChar, "Request Cookies:", result.request.Cookies())
+	}
+
+	// Response stuff
+	// Response certificates: May occour in all hops or only at last hop
+	if redirectFlags.showResponseCert && showResponse {
+		chainPrintCertificates(htab, vbar, at.BulletChar, "Certificate(s):", result.response.TLS)
+	}
+
 	// Response Headers: May occour in all hops or only at last hop
-	if redirectFlags.showResponseHeader && showRespons {
+	if redirectFlags.showResponseHeader && showResponse {
 		if len(redirectFlags.displaySingleHeader) == 0 {
 			chainPrintHeaders(htab, vbar, at.BulletChar, "Response Header:", result.response.Header)
 		} else {
 			chainPrintHeaders(htab, vbar, at.BulletChar, "Selected Headers:", makeHeadersFromName(redirectFlags.displaySingleHeader, result.response.Header))
+		}
+	}
+
+	// Response cookies: May occour in all hops or only at last hop
+	if redirectFlags.showResponseCookies && showResponse {
+		if len(redirectFlags.displaySingleHeader) == 0 {
+			chainPrintCookies(htab, vbar, at.BulletChar, "Stored Cookies:", result.cookieLst)
+		} else {
+			chainPrintCookies(htab, vbar, at.BulletChar, "Selected Cookies:", makeCookiesFromNames(result.cookieLst, cookieFlags.displaySingleCookie))
 		}
 	}
 }
