@@ -5,6 +5,9 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"strings"
 
 	at "github.com/hleinders/AnsiTerm"
 	"github.com/spf13/cobra"
@@ -88,7 +91,19 @@ func ExecRedirects(cmd *cobra.Command, args []string) {
 
 		// display results
 		prettyPrintChain(hops)
-		fmt.Println()
+
+		if redirectFlags.showContent {
+			lastHop := hops[len(hops)-1]
+			body, err := io.ReadAll(lastHop.response.Body)
+			if err != nil {
+				pr.Errorln("%s", err)
+			} else {
+				fmt.Fprintln(os.Stderr)
+				fmt.Fprintln(os.Stderr, at.Bold("Content:"))
+				fmt.Fprintln(os.Stderr, at.Bold(strings.Repeat(at.FrameOHLine, 8)))
+				fmt.Fprintf(os.Stderr, "\n%+v\n", string(body))
+			}
+		}
 	}
 }
 
@@ -123,6 +138,7 @@ func prettyPrintChain(resultList []WebRequestResult) {
 
 	// last status:
 	fmt.Println(resultList[numItem].PrettyPrintLast())
+	fmt.Println()
 }
 
 func rdHandleHeaders(result WebRequestResult, showResponse bool) {

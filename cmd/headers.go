@@ -28,7 +28,7 @@ var headersCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"hd", "hdr", "head"},
 	Short:   headerShortDesc,
-	Long: makeHeader("htprobe headers: "+headerShortDesc) + `With 'htprobe headers <URL>' all request and response headers
+	Long: makeHeader("htprobe headers: "+headerShortDesc) + `With 'htprobe headers <URL>', all request and response headers
 are shown. You may pass the '-f|--follow' flag to follow redirects.
 In this case, the headers can be displayed in any hop with the '-a|--all' flag.
 

@@ -26,7 +26,7 @@ var certificateCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"ct", "crt", "cert"},
 	Short:   certificateShortDesc,
-	Long: makeHeader("htprobe certificate: "+certificateShortDesc) + `With 'htprobe certificate <URL>' the server certificate of URL
+	Long: makeHeader("htprobe certificate: "+certificateShortDesc) + `With 'htprobe certificate <URL>', the server certificate of URL
 is shown. If the certifiace is invalid for some reason and the
 connection is declined, you may force the connection with the
 '-t|--trust' flag to force the connection to be trusted.
@@ -188,39 +188,6 @@ func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.C
 
 	fmt.Printf("%s%s\n", indent, frameChar)
 }
-
-// func displayCert(contStr string, resp *http.Response) {
-// 	var chain []string
-// 	var msg, msgSAN string
-
-// 	if resp.TLS != nil {
-// 		// chain := "CA-Chain: "
-// 		cert := resp.TLS.PeerCertificates
-// 		c0 := cert[0]
-// 		commonName := c0.Subject.CommonName
-// 		subjectANs := c0.DNSNames
-// 		validUntil := c0.NotAfter
-
-// 		if len(subjectANs) > 0 {
-// 			msgSAN = "[" + strings.Join(subjectANs, ", ") + "]"
-// 		} else {
-// 			msgSAN = "None"
-// 		}
-
-// 		for _, c := range cert[1:] {
-// 			chain = append(chain, c.Subject.CommonName)
-// 		}
-// 		pprint(contStr, bold("Certificate(s):\n"))
-// 		msg = fmt.Sprintf("CN: %s (SAN: %s)\n", commonName, msgSAN)
-// 		pprint(contStr, msg)
-// 		msg = fmt.Sprintf("CA-Chain: %s\n", strings.Join(chain, " "+larrow+" "))
-// 		pprint(contStr, msg)
-// 		msg = fmt.Sprintf("Valid until: %s\n", validUntil)
-// 		pprint(contStr, msg)
-
-// 		fmt.Printf("%s%s\n", frameHztab, contStr)
-// 	}
-// }
 
 func prettyPrintCertificates(resultList []WebRequestResult) {
 
