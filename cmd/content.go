@@ -40,7 +40,7 @@ func init() {
 	rootCmd.AddCommand(contentCmd)
 
 	// flags
-	contentCmd.Flags().BoolVarP(&contentFlags.follow, "follow", "f", false, "show all response cookies")
+	contentCmd.Flags().BoolVarP(&contentFlags.follow, "follow", "f", false, "show content for all hops")
 
 }
 
@@ -66,7 +66,7 @@ func ExecContent(cmd *cobra.Command, args []string) {
 		check(err, ErrNoURL)
 
 		// handle the request(s)
-		if headerFlags.follow {
+		if contentFlags.follow {
 			hops, err = follow(&newReq, &connSet)
 			if err != nil {
 				pr.Error(err.Error())

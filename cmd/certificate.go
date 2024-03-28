@@ -43,7 +43,7 @@ func init() {
 	rootCmd.AddCommand(certificateCmd)
 
 	// flags
-	certificateCmd.Flags().BoolVarP(&certificateFlags.follow, "follow", "f", false, "show all response cookies")
+	certificateCmd.Flags().BoolVarP(&certificateFlags.follow, "follow", "f", false, "show response cookies for all hops")
 }
 
 func ExecCertificate(cmd *cobra.Command, args []string) {

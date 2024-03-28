@@ -42,7 +42,7 @@ func init() {
 	rootCmd.AddCommand(headersCmd)
 
 	// flags
-	headersCmd.Flags().BoolVarP(&headerFlags.follow, "follow", "f", false, "show all response cookies")
+	headersCmd.Flags().BoolVarP(&headerFlags.follow, "follow", "f", false, "show headers for all hops")
 
 	// Parameter
 	headersCmd.Flags().StringSliceVarP(&headerFlags.displaySingleHeader, "show-header", "S", nil, "show only response header `FOOBAR`; ***")
