@@ -31,7 +31,9 @@ var redirectsCmd = &cobra.Command{
 request is shown. Every hop of this chain is displayed with the status code.
 If the request is done via SSL and he certifiace is invalid for some reason,
 you may force the connection with the '-t|--trust' flag to force the connection
-to be trusted. You may also display details like headers or cookies.`,
+to be trusted. You may also display details like headers or cookies.
+
+Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecRedirects(cmd, args)
 	},
@@ -41,17 +43,17 @@ func init() {
 	rootCmd.AddCommand(redirectsCmd)
 
 	// flags
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseCookies, "show-cookies", "c", false, "show all response cookies")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseCookies, "show-cookies", "c", false, "show response cookies")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseCert, "show-cert", "C", false, "show certificate(s)")
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseHeader, "response-header", "H", false, "show response header")
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestHeader, "request-header", "R", false, "show request header")
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestCookies, "request-cookies", "Z", false, "show request header")
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showContent, "show-content", "O", false, "show content of last hop\n(prints to stderr)")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseHeader, "response-headers", "H", false, "show response headers")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestHeader, "request-headers", "R", false, "show request headers")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestCookies, "request-cookies", "Z", false, "show request cookies")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showContent, "show-content", "O", false, "show content of last hop (prints to stderr)")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.allHops, "all", "a", false, "show all details")
 
 	// Parameter
-	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleHeader, "display-header", "S", nil, "show only response header `FOOBAR`\n(Can be used multiple times)")
-	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleCookie, "display-cookie", "D", nil, "show only response header `FOOBAR`\n(Can be used multiple times)")
+	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleHeader, "display-header", "S", nil, "show only response header `FOOBAR`; ***")
+	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleCookie, "display-cookie", "D", nil, "show only response cookie `SNAFU`; ***")
 
 	// SingleHeader implies show ResponseHeaders:
 	redirectFlags.showResponseHeader = redirectFlags.showResponseHeader || redirectsCmd.Flags().Changed("header")

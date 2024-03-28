@@ -31,7 +31,9 @@ is shown. If the certifiace is invalid for some reason and the
 connection is declined, you may force the connection with the
 '-t|--trust' flag to force the connection to be trusted.
 You may pass the '-f|--follow' flag to follow redirects. In this case,
-the certificate can be displayed in any hop with the '-a|--all' flag.`,
+the certificate can be displayed in any hop with the '-a|--all' flag.
+
+Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecCertificate(cmd, args)
 	},

@@ -45,7 +45,9 @@ var rootCmd = &cobra.Command{
 	Short:   rootShortDesc,
 	Long: makeHeader("htprobe: "+rootShortDesc) + `With 'htprobe', different aspects of a http request can
 be examined and displayed. You can show and search for headers or
-cookies, can display certificates or follow a redirect chain.`,
+cookies, can display certificates or follow a redirect chain.
+
+Flags marked with '***' may be used multiple times.`,
 	PersistentPreRun: PersistentPreRun,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
@@ -68,7 +70,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.ascii, "ascii", false, "use ascii chars only")
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noColor, "no-color", false, "do not use colors")
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noFancy, "no-fancy", false, "combines no color and ascii mode")
-	rootCmd.PersistentFlags().BoolVarP(&connSet.trust, "trust", "t", false, "trust selfsigned certificates")
+	rootCmd.PersistentFlags().BoolVarP(&connSet.trust, "trust", "t", false, "trust invalid certificates")
 	rootCmd.PersistentFlags().BoolVarP(&rootFlags.resolve, "resolve", "r", false, "resolve host names")
 	rootCmd.PersistentFlags().BoolVarP(&rootFlags.long, "long", "l", false, "long output, don't shorten results (header, cookies etc.)")
 	rootCmd.PersistentFlags().BoolVarP(&connSet.acceptCookies, "accept-cookies", "A", false, "accept response cookies")
@@ -78,14 +80,14 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.authPass, "pass", "p", "", "`password` (basic auth)")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.agent, "agent", agentString, "user agent")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.reqLang, "lang", "L", "", "set `language` header for request")
-	rootCmd.PersistentFlags().StringVarP(&connSet.proxy, "proxy", "P", "", "set `host` as proxy")
+	rootCmd.PersistentFlags().StringVarP(&connSet.proxy, "proxy", "P", "", "set `host(:port)` as proxy")
 	rootCmd.PersistentFlags().IntVarP(&connTimeout, "timeout", "T", DefaultConnectionTimeout, "connection `time`out in seconds (0=disable, <=3600)")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.httpMethod, "method", "m", "GET", "http request `method` (see RFC 7231 section 4.3.)")
-	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.cookieValues, "rq-cookie", "q", nil, "set request cookie (fmt: `name:value`)\n(Can be used multiple times)")
-	rootCmd.PersistentFlags().StringVarP(&rootFlags.cookieFile, "rq-cookie-file", "Q", "", "read cookies from `file` (fmt: lines of 'name:value')")
-	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.bodyValues, "rq-body", "b", nil, "add `entry` to request body where needed (e.g. POST)\n(Can be used multiple times)")
+	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.cookieValues, "rq-cookie", "q", nil, "set request cookie (fmt: `name:value`); ***")
+	rootCmd.PersistentFlags().StringVarP(&rootFlags.cookieFile, "rq-cookie-file", "Q", "", "read request cookies from `file` (fmt: lines of 'name:value')")
+	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.bodyValues, "rq-body", "b", nil, "add `entry` to request body where needed (e.g. POST); ***")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.bodyFile, "rq-body-file", "B", "", "read request body from `file`")
-	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.xtraHeaders, "rq-header", "x", nil, "pass extra `header` to request (fmt: 'Name: Value')\n(Can be used multiple times)")
+	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.xtraHeaders, "rq-header", "x", nil, "pass extra `header` to request (fmt: 'Name: Value'); ***")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.headerFile, "rq-header-file", "X", "", "read extra request headers from `file` (fmt: lines of 'name:value')")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

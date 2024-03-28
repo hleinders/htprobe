@@ -29,7 +29,9 @@ var cookiesCmd = &cobra.Command{
 	Short:   cookieShortDesc,
 	Long: makeHeader("htprobe cookies: "+cookieShortDesc) + `With 'htprobe cookies <URL>' all request and response cookies
 are shown. You may pass the '-f|--follow' flag to follow redirects.
-In this case, the cookies can be displayed in any hop with the '-a|--all' flag.`,
+In this case, the cookies can be displayed in any hop with the '-a|--all' flag.
+
+Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecCookies(cmd, args)
 	},
@@ -42,7 +44,7 @@ func init() {
 	cookiesCmd.Flags().BoolVarP(&cookieFlags.follow, "follow", "f", false, "show all response cookies")
 
 	// Parameter
-	cookiesCmd.Flags().StringSliceVarP(&cookieFlags.displaySingleCookie, "show-cookie", "S", nil, "show only cookie `FOOBAR`\n(Can be used multiple times)")
+	cookiesCmd.Flags().StringSliceVarP(&cookieFlags.displaySingleCookie, "show-cookie", "S", nil, "show only cookie `FOOBAR`; ***")
 
 }
 

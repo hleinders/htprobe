@@ -30,7 +30,9 @@ var headersCmd = &cobra.Command{
 	Short:   headerShortDesc,
 	Long: makeHeader("htprobe headers: "+headerShortDesc) + `With 'htprobe headers <URL>' all request and response headers
 are shown. You may pass the '-f|--follow' flag to follow redirects.
-In this case, the headers can be displayed in any hop with the '-a|--all' flag.`,
+In this case, the headers can be displayed in any hop with the '-a|--all' flag.
+
+Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ExecHeaders(cmd, args)
 	},
@@ -43,7 +45,7 @@ func init() {
 	headersCmd.Flags().BoolVarP(&headerFlags.follow, "follow", "f", false, "show all response cookies")
 
 	// Parameter
-	headersCmd.Flags().StringSliceVarP(&headerFlags.displaySingleHeader, "show-header", "S", nil, "show only response header `FOOBAR`\n(Can be used multiple times)")
+	headersCmd.Flags().StringSliceVarP(&headerFlags.displaySingleHeader, "show-header", "S", nil, "show only response header `FOOBAR`; ***")
 }
 
 func ExecHeaders(cmd *cobra.Command, args []string) {
