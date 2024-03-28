@@ -1,5 +1,5 @@
 /*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+Copyright © 2024 Dr. Harald Leinders <harald@leinders.de>
 */
 package cmd
 
