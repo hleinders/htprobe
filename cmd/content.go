@@ -102,6 +102,8 @@ func prettyPrintContent(resultList []WebRequestResult) {
 		if err == nil {
 			defer fo.Close()
 			out = fo
+		} else {
+			pr.Error("%s\n", err.Error())
 		}
 	}
 
