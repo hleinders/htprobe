@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	at "github.com/hleinders/AnsiTerm"
@@ -13,7 +14,8 @@ import (
 )
 
 type ContentFlags struct {
-	follow bool
+	follow  bool
+	outFile string
 }
 
 var contentFlags ContentFlags
@@ -42,6 +44,8 @@ func init() {
 	// flags
 	contentCmd.Flags().BoolVarP(&contentFlags.follow, "follow", "f", false, "show content for all hops")
 
+	// Parameter
+	contentCmd.Flags().StringVarP(&contentFlags.outFile, "outfile", "o", "", "write content to `file`")
 }
 
 func ExecContent(cmd *cobra.Command, args []string) {
@@ -85,27 +89,40 @@ func ExecContent(cmd *cobra.Command, args []string) {
 }
 
 func prettyPrintContent(resultList []WebRequestResult) {
+	var fo *os.File
+	var err error
 
+	out := os.Stdout
+
+	// only for screen
 	fmt.Println()
+
+	if contentFlags.outFile != "" {
+		fo, err = os.Create(contentFlags.outFile)
+		if err == nil {
+			defer fo.Close()
+			out = fo
+		}
+	}
 
 	for cnt, h := range resultList {
 
 		title := fmt.Sprintf("%d:  %s (%s)", cnt+1, h.PrettyPrintRedir(cnt), colorStatus(h.response.StatusCode))
 		titleLen := len(stripColorCodes(title))
 
-		fmt.Println(title)
-		fmt.Println(strings.Repeat(at.FrameOHLine, titleLen))
-		fmt.Println()
+		fmt.Fprintln(out, title)
+		fmt.Fprintln(out, strings.Repeat(at.FrameOHLine, titleLen))
+		fmt.Fprintln(out)
 
 		body, err := io.ReadAll(h.response.Body)
 		if err != nil {
 			pr.Errorln("%s", err)
 		} else {
-			fmt.Println(at.Bold("Content:"))
-			fmt.Println(at.Bold(strings.Repeat(at.FrameOHLine, 8)))
-			fmt.Printf("\n%+v\n", string(body))
+			fmt.Fprintln(out, at.Bold("Content:"))
+			fmt.Fprintln(out, at.Bold(strings.Repeat(at.FrameOHLine, 8)))
+			fmt.Fprintf(out, "\n%+v\n", string(body))
 		}
 
-		fmt.Println()
+		fmt.Fprintln(out)
 	}
 }

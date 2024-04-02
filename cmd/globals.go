@@ -31,7 +31,7 @@ const (
 )
 
 const (
-	AppVersion               = "1.1 (2024-03-24)"
+	AppVersion               = "1.2 (2024-04-02)"
 	Author                   = "Harald Leinders <harald@leinders.de>"
 	DefaultConnectionTimeout = 3
 	MaxRedirects             = 25
