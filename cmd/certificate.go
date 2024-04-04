@@ -135,7 +135,7 @@ func displayCertificates(indent, frameChar, mark, titleMsg string, tls *tls.Conn
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  CA-Chain:    %s", commonName))
 		for _, c := range cert[1:] {
 			// chain = append(chain, c.Subject.CommonName)
-			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("               %s  %s", at.Larrow, c.Subject.CommonName))
+			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("               %s  %s (%s)", at.Larrow, c.Subject.CommonName, strings.Join(c.Subject.Organization, ", ")))
 		}
 
 	} else {
