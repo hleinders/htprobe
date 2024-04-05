@@ -173,9 +173,3 @@ Die kann man automatisieren, z.B. für die *zsh*, in dem man in der $HOME/.zshrc
 source <(htprobe completion zsh)
 ```
 
-
-
-## Danksagung
-
-Dieses Programm wäre ohne die Vorarbeit von so vielen Open Source Programmierern nicht möglich gewesen. Insbesondere möchte ich die folgenden Module nennen: "[cobra](https://pkg.go.dev/github.com/spf13/cobra)" und "[pflag](https://pkg.go.dev/github.com/spf13/pflag)" von Steve Francia (spf13) sowie "[color](https://github.com/fatih/color)" von Fatih Arslan (fatih).
-
