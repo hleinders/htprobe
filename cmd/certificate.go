@@ -26,7 +26,7 @@ var certificateCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"ct", "crt", "cert"},
 	Short:   certificateShortDesc,
-	Long: makeHeader("htprobe certificate: "+certificateShortDesc) + `With 'htprobe certificate <URL>', the server certificate of URL
+	Long: makeHeader(lowerAppName+" certificate: "+certificateShortDesc) + `With command 'certificate', the server certificate of URL
 is shown. If the certifiace is invalid for some reason and the
 connection is declined, you may force the connection with the
 '-t|--trust' flag to force the connection to be trusted.

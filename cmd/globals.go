@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"time"
 
 	at "github.com/hleinders/AnsiTerm"
@@ -31,7 +32,8 @@ const (
 )
 
 const (
-	AppVersion               = "1.2 (2024-04-02)"
+	AppName                  = "HtProbe"
+	AppVersion               = "1.2 (2024-04-05)"
 	Author                   = "Harald Leinders <harald@leinders.de>"
 	DefaultConnectionTimeout = 3
 	MaxRedirects             = 25
@@ -121,7 +123,8 @@ var AllowedHttpMethods = []RequestMethod{
 }
 
 var (
-	agentString       = "Golang Request Checker v" + AppVersion
+	lowerAppName      = strings.ToLower(AppName)
+	agentString       = AppName + " Request Analyzer v" + AppVersion
 	rqHeaderDone      = false
 	rqCookiesDone     = false
 	globalRequestBody string

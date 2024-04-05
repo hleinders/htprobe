@@ -30,11 +30,11 @@ var redirectsCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"rd", "redir", "redirect"},
 	Short:   redirectShortDesc,
-	Long: makeHeader("htprobe redirects: "+redirectShortDesc) + `With 'htprobe redirects <URL>', the redirect chain of a http
+	Long: makeHeader(lowerAppName+" redirects: "+redirectShortDesc) + `With command 'redirects', the redirect chain of a http
 request is shown. Every hop of this chain is displayed with the status code.
-If the request is done via SSL and he certifiace is invalid for some reason,
-you may force the connection with the '-t|--trust' flag to force the connection
-to be trusted. You may also display details like headers or cookies.
+If the request is done via SSL and he certificate is invalid for some reason,
+you may use the '-t|--trust' flag to force the connection to be trusted.
+You can also display details like headers or cookies.
 
 Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {

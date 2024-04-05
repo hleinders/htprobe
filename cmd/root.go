@@ -40,12 +40,12 @@ var rootShortDesc = "A http request analyzing and debugging tool"
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "htprobe",
+	Use:     lowerAppName,
 	Version: AppVersion,
 	Short:   rootShortDesc,
-	Long: makeHeader("htprobe: "+rootShortDesc) + `With 'htprobe', different aspects of a http request can
+	Long: makeHeader(lowerAppName+": "+rootShortDesc) + "With '" + lowerAppName + `', different aspects of a http request can
 be examined and displayed. You can show and search for headers or
-cookies, can display certificates or follow a redirect chain.
+cookies, display certificates or follow a redirect chain.
 
 Flags marked with '***' may be used multiple times.`,
 	PersistentPreRun: PersistentPreRun,

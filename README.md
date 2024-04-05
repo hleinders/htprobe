@@ -64,9 +64,9 @@ $ go build     # or go install, if GOBIN is set
 $ htprobe redirects nasa.gov
 
 URL: http://nasa.gov  [GET]
-┣━━ (301) ⮕  [GET] https://nasa.gov/
-┣━━ (302) ⮕  [GET] https://www.nasa.gov/
-┗━━ (200) ⮕  200 OK
+       ┣━━ (301) ⮕  [GET] https://nasa.gov/
+       ┣━━ (302) ⮕  [GET] https://www.nasa.gov/
+       ┗━━ (200) ⮕  200 OK
 
 ```
 
@@ -80,22 +80,22 @@ $ htprobe headers https://www.nasa.gov/
 1:  URL: https://www.nasa.gov/  [GET] (200)
 ═══════════════════════════════════════════
 
-Request Header:
-• User-Agent: Golang Request Checker v1.1 (2024-03-24)
+     Request Header:
+     • User-Agent: HtProbe Request Analyzer v1.2 (2024-04-05)
 
-Response Header:
-• Accept-Ranges: bytes
-• Age: 89
-• Cache-Control: max-age=300, must-revalidate
-• Content-Type: text/html; charset=UTF-8
-• Date: Thu, 04 Apr 2024 09:31:54 GMT
-• Host-Header: a9130478a60e5f9135f765b23f26593b
-• Server: nginx
-• Strict-Transport-Security: max-age=31536000
-• Vary: Accept-Encoding
-• X-Cache: hit
-• X-Launch-Status: Go Flight!
-• X-Rq: hhn1 85 188 443
+     Response Header:
+     • Accept-Ranges: bytes
+     • Age: 89
+     • Cache-Control: max-age=300, must-revalidate
+     • Content-Type: text/html; charset=UTF-8
+     • Date: Thu, 04 Apr 2024 09:31:54 GMT
+     • Host-Header: a9130478a60e5f9135f765b23f26593b
+     • Server: nginx
+     • Strict-Transport-Security: max-age=31536000
+     • Vary: Accept-Encoding
+     • X-Cache: hit
+     • X-Launch-Status: Go Flight!
+     • X-Rq: hhn1 85 188 443
 
 ```
 
@@ -109,12 +109,12 @@ $ htprobe certificate https://www.nasa.gov/
 1:  URL: https://www.nasa.gov/  [GET] (200)
 ═══════════════════════════════════════════
 
-Certificate(s):
-• CN:          nasa.gov
-SANs:        nasa.gov, www.nasa.gov
-Valid until: 2024-06-25 13:02:10 +0000 UTC
-CA-Chain:    nasa.gov
-⋘  R3 (Let's Encrypt)
+     Certificate(s):
+     • CN:          nasa.gov
+       SANs:        nasa.gov, www.nasa.gov
+       Valid until: 2024-06-25 13:02:10 +0000 UTC
+       CA-Chain:    nasa.gov
+       ⋘  R3 (Let's Encrypt)
 
 ```
 
@@ -139,21 +139,21 @@ Damit kann man die obigen Aufrufe ein wenig vereinfachen, zum Beispiel:
 $ checkRedirects nasa.gov
 
 URL: http://nasa.gov  [GET]
-┣━━ (301) ⮕  [GET] https://nasa.gov/
-┣━━ (302) ⮕  [GET] https://www.nasa.gov/
-┗━━ (200) ⮕  200 OK
+       ┣━━ (301) ⮕  [GET] https://nasa.gov/
+       ┣━━ (302) ⮕  [GET] https://www.nasa.gov/
+       ┗━━ (200) ⮕  200 OK
 
 $ checkCert https://www.nasa.gov/
 
 1:  URL: https://www.nasa.gov/  [GET] (200)
 ═══════════════════════════════════════════
 
-Certificate(s):
-• CN:          nasa.gov
-SANs:        nasa.gov, www.nasa.gov
-Valid until: 2024-06-25 13:02:10 +0000 UTC
-CA-Chain:    nasa.gov
-⋘  R3 (Let's Encrypt)
+     Certificate(s):
+     • CN:          nasa.gov
+       SANs:        nasa.gov, www.nasa.gov
+       Valid until: 2024-06-25 13:02:10 +0000 UTC
+       CA-Chain:    nasa.gov
+       ⋘  R3 (Let's Encrypt)
 
 ```
 
@@ -172,4 +172,10 @@ Die kann man automatisieren, z.B. für die *zsh*, in dem man in der $HOME/.zshrc
 ```shell
 source <(htprobe completion zsh)
 ```
+
+
+
+## Danksagung
+
+Dieses Programm wäre ohne die Vorarbeit von so vielen Open Source Programmierern nicht möglich gewesen. Insbesondere möchte ich die folgenden Module nennen: "[cobra](https://pkg.go.dev/github.com/spf13/cobra)" und "[pflag](https://pkg.go.dev/github.com/spf13/pflag)" von Steve Francia (spf13) sowie "[color](https://github.com/fatih/color)" von Fatih Arslan (fatih).
 

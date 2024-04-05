@@ -27,7 +27,7 @@ var cookiesCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"ck", "cookie"},
 	Short:   cookieShortDesc,
-	Long: makeHeader("htprobe cookies: "+cookieShortDesc) + `With 'htprobe cookies <URL>', all request and response cookies
+	Long: makeHeader(lowerAppName+" cookies: "+cookieShortDesc) + `With command 'cookies', all request and response cookies
 are shown. You may pass the '-f|--follow' flag to follow redirects.
 In this case, the cookies can be displayed in any hop with the '-a|--all' flag.
 

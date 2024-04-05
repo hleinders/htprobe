@@ -28,7 +28,7 @@ var contentCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Aliases: []string{"cnt", "cont"},
 	Short:   contentShortDesc,
-	Long: makeHeader("htprobe content: "+contentShortDesc) + `With 'htprobe content <URL>', the full response body
+	Long: makeHeader(lowerAppName+" content: "+contentShortDesc) + `With command 'content', the full response body
 	is shown. You may pass the '-f|--follow' flag to follow redirects.
 	In this case, the content of any hop is displayed with the '-a|--all' flag.
 
