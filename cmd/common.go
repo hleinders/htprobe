@@ -116,7 +116,7 @@ func colorStatus(stat int) string {
 		return at.Yellow(statStr)
 	case stat < 500:
 		return at.Red(statStr)
-	case stat < 600:
+	case stat < 600 || stat == 999:
 		return at.Magenta(statStr)
 	default:
 		return statStr
@@ -313,15 +313,16 @@ func follow(wr *WebRequest, cs *ConnectionSetup) ([]WebRequestResult, error) {
 		wr.url = *rdURL
 		wr.method = result.response.Request.Method
 
-		cnt++
-		if cnt >= MaxRedirects {
-			result.response.StatusCode = 999
-			break
-		}
-
 		// next hop:
 		result, err = doRequest(hc, wr)
 		check(err, ErrRequest)
+
+		// limit reached?
+		cnt++
+		if cnt >= MaxRedirects {
+			result.response.StatusCode = 999
+			result.response.Status = "999 Too many redirects"
+		}
 
 		// add to list:
 		resultList = append(resultList, result)

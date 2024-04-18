@@ -107,7 +107,7 @@ func (r WebRequestResult) PrettyPrintNormal(lastStatusCode int) string {
 }
 
 func (r WebRequestResult) PrettyPrintLast() string {
-	return fmt.Sprintf("%s%s (%s) %s  %s", htab, corner, colorStatus(r.response.StatusCode), rarrow, r.response.Status)
+	return fmt.Sprintf("%s%s (%s) %s  %s", htab, corner, colorStatus(r.response.StatusCode), rarrow, at.Bold(r.response.Status))
 }
 
 var AllowedHttpMethods = []RequestMethod{
