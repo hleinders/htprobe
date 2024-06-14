@@ -127,6 +127,7 @@ var (
 	agentString       = AppName + " Request Analyzer v" + AppVersion
 	rqHeaderDone      = false
 	rqCookiesDone     = false
+	colorMode         = true
 	globalRequestBody string
 	globalHeaderList  []string
 	globalCookieLst   []*http.Cookie

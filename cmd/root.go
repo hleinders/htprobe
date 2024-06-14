@@ -103,6 +103,7 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 
 	// handle fancy stuff
 	color.NoColor = rootFlags.noColor || at.NoColor()
+	colorMode = !color.NoColor
 
 	// handle charset
 	if rootFlags.ascii {

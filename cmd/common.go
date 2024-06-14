@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
@@ -147,6 +148,12 @@ func stripColorCodes(str string) string {
 	return re.ReplaceAllString(str, "")
 }
 
+func resetColor() {
+	if colorMode {
+		fmt.Print(at.Normal(""))
+	}
+}
+
 // This function parses an string of the form "name: value" to a cookie
 func getCookieFromString(raw string) (http.Cookie, error) {
 	var c http.Cookie
@@ -182,6 +189,20 @@ func findCookieInList(cookie *http.Cookie, list []*http.Cookie) bool {
 	}
 
 	return false
+}
+
+func getIssuer(peers []*x509.Certificate) (*x509.Certificate, bool) {
+	var issuer *x509.Certificate
+	var found bool
+
+	pl := len(peers)
+
+	if pl > 1 {
+		found = true
+		issuer = peers[pl-1]
+	}
+
+	return issuer, found
 }
 
 // =================================== HTTP Request Functions ==================================
