@@ -15,8 +15,9 @@ import (
 )
 
 type CertificateFlags struct {
-	follow      bool
-	showDetails bool
+	follow             bool
+	showDetails        bool
+	showValidatedChain bool
 }
 
 var certificateFlags CertificateFlags
@@ -33,8 +34,8 @@ var certificateCmd = &cobra.Command{
 is shown. If the certifiace is invalid for some reason and the
 connection is declined, you may force the connection with the
 '-t|--trust' flag to force the connection to be trusted.
-You may pass the '-f|--follow' flag to follow redirects. In this case,
-the certificate can be displayed in any hop with the '-a|--all' flag.
+You may pass the '-f|--follow' flag to follow redirects.
+Normally,
 
 Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -47,7 +48,8 @@ func init() {
 
 	// flags
 	certificateCmd.Flags().BoolVarP(&certificateFlags.follow, "follow", "f", false, "show response cookies for all hops")
-	certificateCmd.Flags().BoolVarP(&certificateFlags.showDetails, "show-cert", "s", false, "display certificate details")
+	certificateCmd.Flags().BoolVarP(&certificateFlags.showDetails, "show-details", "s", false, "show certificate details")
+	certificateCmd.Flags().BoolVarP(&certificateFlags.showValidatedChain, "validated-chain", "V", false, "display client side verified certificate chain")
 }
 
 func ExecCertificate(cmd *cobra.Command, args []string) {
@@ -98,6 +100,12 @@ type Cert struct {
 	validUntil        time.Time
 	organization      string
 	organizationUnits string
+	country           string
+	isCA              bool
+	issuerName        string
+	issuerOrg         string
+	issuerOU          string
+	issuerCountry     string
 }
 
 func makeCert(rawCert *x509.Certificate) Cert {
@@ -108,6 +116,7 @@ func makeCert(rawCert *x509.Certificate) Cert {
 	c.subjectANs = rawCert.DNSNames
 	c.validFrom = rawCert.NotBefore
 	c.validUntil = rawCert.NotAfter
+	c.isCA = rawCert.IsCA
 
 	if list := rawCert.Subject.Organization; len(list) > 0 {
 		c.organization = strings.Join(list, ", ")
@@ -117,38 +126,71 @@ func makeCert(rawCert *x509.Certificate) Cert {
 
 	if list := rawCert.Subject.OrganizationalUnit; len(list) > 0 {
 		c.organizationUnits = strings.Join(list, ", ")
+	}
+
+	if list := rawCert.Subject.Country; len(list) > 0 {
+		c.country = strings.Join(list, ", ")
+	}
+
+	c.issuerName = rawCert.Issuer.CommonName
+
+	if list := rawCert.Issuer.Organization; len(list) > 0 {
+		c.issuerOrg = strings.Join(list, ", ")
 	} else {
-		c.organizationUnits = "(not available)"
+		c.issuerOrg = "(not available)"
+	}
+
+	if list := rawCert.Issuer.OrganizationalUnit; len(list) > 0 {
+		c.issuerOU = strings.Join(list, ", ")
+	}
+
+	if list := rawCert.Issuer.Country; len(list) > 0 {
+		c.issuerCountry = strings.Join(list, ", ")
 	}
 
 	return c
 }
 
+func displayCertChain(count int, title, fmtString, indent, frameChar string, chain []*x509.Certificate) {
+	commonName := strings.ToLower(chain[0].Subject.CommonName)
+	fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  %-9s [%d] %s", title, count, commonName))
+
+	for _, c := range chain[1:] {
+		chainName := c.Subject.CommonName
+		if len(chainName) == 0 {
+			break
+		}
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("                %s  %s (%s)", at.Larrow, chainName, strings.Join(c.Subject.Organization, ", ")))
+	}
+
+}
+
 func displayCertificates(indent, frameChar, mark, titleMsg string, tls *tls.ConnectionState) {
 	var msgSAN string
-	var nameFound bool
-	var displayName string
-	var c0, issuer Cert
+	var found, nameFound bool
+	var displayName, heading string
+	var c0 Cert
 
 	fmtString := "%s%s   %s\n"
 	fmt.Printf(fmtString, indent, frameChar, at.Bold(titleMsg))
 
 	if tls != nil {
 		// prepare certs:
-		peers := tls.PeerCertificates
-		c0 = makeCert(peers[0])
+		peers := tls.PeerCertificates // default
+		verifiedChains := tls.VerifiedChains
 
-		rawIssuer, issuerFound := getIssuer(peers)
-		if issuerFound {
-			issuer = makeCert(rawIssuer)
-		}
+		pr.Debug("Verified Chain: %v\n", tls.VerifiedChains)
+		pr.Debug("Peers: %v\n", peers)
+
+		c0 = makeCert(peers[0])
 
 		serverName := strings.ToLower(strings.TrimSpace(tls.ServerName))
 		displayName = c0.commonName
-		if c0.commonName == serverName {
+
+		if matchGlob(c0.commonName, serverName) {
 			displayName = at.Green(c0.commonName)
 			nameFound = true
-		} else if found := findInSlice(c0.subjectANs, serverName); found {
+		} else if found = findGlobInSlice(c0.subjectANs, serverName); found {
 			c0.subjectANs = markGreenInSlice(c0.subjectANs, serverName)
 			nameFound = true
 		}
@@ -170,7 +212,12 @@ func displayCertificates(indent, frameChar, mark, titleMsg string, tls *tls.Conn
 
 		if certificateFlags.showDetails {
 			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Organization: %s", c0.organization))
-			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Unit:         %s", c0.organizationUnits))
+			if c0.organizationUnits != "" {
+				fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Unit:         %s", c0.organizationUnits))
+			}
+			if c0.country != "" {
+				fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Country:      %s", c0.country))
+			}
 		}
 
 		// print sans
@@ -178,37 +225,59 @@ func displayCertificates(indent, frameChar, mark, titleMsg string, tls *tls.Conn
 		resetColor()
 
 		// print issuer
-		if certificateFlags.showDetails && issuerFound {
+		if certificateFlags.showDetails {
 			fmt.Println()
-			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Issuer:       %s", shorten(rootFlags.long, screenWidth-25, issuer.rawCName)))
-			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Organization: %s", issuer.organization))
-			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Unit:         %s", issuer.organizationUnits))
+			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Issuer:       %s", shorten(rootFlags.long, screenWidth-25, c0.issuerName)))
+			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Organization: %s", c0.issuerOrg))
+			if c0.issuerOU != "" {
+				fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Unit:         %s", c0.issuerOU))
+			}
+			if c0.issuerCountry != "" {
+				fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Country:      %s", c0.issuerCountry))
+			}
 		}
 
 		// validity
 		if certificateFlags.showDetails {
 			fmt.Println()
-		}
-		if certificateFlags.showDetails {
 			fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Valid from:   %s", c0.validFrom))
 		}
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Valid until:  %s", colorValidity(c0.validUntil)))
 
-		// print chain
+		// print peer chain
 		if certificateFlags.showDetails {
 			fmt.Println()
-		}
-		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  CA-Chain:     %s", c0.commonName))
-		for _, c := range peers[1:] {
-			// chain = append(chain, c.Subject.CommonName)
+			peerType := at.Green("sent by peer")
+			if len(peers) < 2 {
+				peerType = at.Red("incomplete")
+			}
+			if connSet.trust {
+				peerType = at.Yellow("trust forced")
+			}
+			if c0.isCA {
+				peerType = at.Red("selfsigned")
+			}
 
-			if certificateFlags.showDetails {
-				fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("                %s  %s", at.Larrow, c.Subject.CommonName))
+			fmt.Printf(fmtString, indent, frameChar, "  Certificate Chain ("+peerType+"):")
+			heading = ""
+		} else {
+			heading = "CA-Chain:"
+
+		}
+		displayCertChain(0, heading, fmtString, indent, frameChar, peers)
+
+		// print verified chain
+		if certificateFlags.showDetails && certificateFlags.showValidatedChain {
+			fmt.Println()
+			if len(verifiedChains) > 0 {
+				fmt.Printf(fmtString, indent, frameChar, "  Verified Chain(s) ("+at.Green("checked by client")+"):")
+				for k, crt := range verifiedChains {
+					displayCertChain(k, heading, fmtString, indent, frameChar, crt)
+				}
 			} else {
-				fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("                %s  %s (%s)", at.Larrow, c.Subject.CommonName, strings.Join(c.Subject.Organization, ", ")))
+				fmt.Printf(fmtString, indent, frameChar, "  Verified Chain(s): None")
 			}
 		}
-
 	} else {
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s", mark, "(None)"))
 	}
@@ -216,6 +285,7 @@ func displayCertificates(indent, frameChar, mark, titleMsg string, tls *tls.Conn
 	fmt.Printf("%s%s\n", indent, frameChar)
 }
 
+// function used by redirects module
 func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.ConnectionState) {
 	var msgSAN, msgCaChain string
 	var caChain []string
@@ -224,13 +294,13 @@ func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.C
 	fmt.Printf(fmtString, indent, frameChar, at.Bold(titleMsg))
 
 	if tls != nil {
-		cert := tls.PeerCertificates
-		c0 := cert[0]
+		certs := tls.PeerCertificates
+		c0 := certs[0]
 		commonName := strings.ToLower(strings.TrimSpace(c0.Subject.CommonName))
 		subjectANs := c0.DNSNames
 		validUntil := c0.NotAfter
 
-		for _, c := range cert {
+		for _, c := range certs {
 			caChain = append(caChain, c.Subject.CommonName)
 		}
 
@@ -246,13 +316,13 @@ func chainPrintCertificates(indent, frameChar, mark, titleMsg string, tls *tls.C
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s CN:          %s", mark, commonName))
 
 		// print sans
-		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  SANs:        %s", shorten(rootFlags.long, screenWidth-20, msgSAN)))
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  SANs:        %s", shorten(rootFlags.long, screenWidth-28, msgSAN)))
 
 		// validity
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  Valid until: %s", colorValidity(validUntil)))
 
 		// print chain
-		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  CA-Chain:    %s", shorten(rootFlags.long, screenWidth-20, msgCaChain)))
+		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("  CA-Chain:    %s", shorten(rootFlags.long, screenWidth-28, msgCaChain)))
 	} else {
 		fmt.Printf(fmtString, indent, frameChar, fmt.Sprintf("%s %s", mark, "(None)"))
 	}

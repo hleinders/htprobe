@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -42,6 +42,28 @@ func splitFirst(str, sep string) (string, string) {
 	}
 
 	return s[0], strings.Join(s[1:], "")
+}
+
+func matchGlob(pattern, name string) bool {
+	var matched bool
+
+	if strings.Contains(pattern, "*") {
+		matched, _ = filepath.Match(pattern, name)
+	} else {
+		matched = (pattern == name)
+	}
+	return matched
+}
+
+func findGlobInSlice(slice []string, str string) bool {
+	s := strings.TrimSpace(str)
+	for _, item := range slice {
+		if matchGlob(strings.TrimSpace(item), s) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func findInSlice(slice []string, str string) bool {
@@ -191,19 +213,19 @@ func findCookieInList(cookie *http.Cookie, list []*http.Cookie) bool {
 	return false
 }
 
-func getIssuer(peers []*x509.Certificate) (*x509.Certificate, bool) {
-	var issuer *x509.Certificate
-	var found bool
+// func getIssuer(peers []*x509.Certificate) (*x509.Certificate, bool) {
+// 	var issuer *x509.Certificate
+// 	var found bool
 
-	pl := len(peers)
+// 	pl := len(peers)
 
-	if pl > 1 {
-		found = true
-		issuer = peers[pl-1]
-	}
+// 	if pl > 1 {
+// 		found = true
+// 		issuer = peers[pl-1]
+// 	}
 
-	return issuer, found
-}
+// 	return issuer, found
+// }
 
 // =================================== HTTP Request Functions ==================================
 func initClient(cs *ConnectionSetup) *http.Client {
