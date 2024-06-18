@@ -33,7 +33,7 @@ const (
 
 const (
 	AppName                  = "HtProbe"
-	AppVersion               = "1.3 (2024-06-24)"
+	AppVersion               = "1.4 (2024-06-18)"
 	Author                   = "Harald Leinders <harald@leinders.de>"
 	DefaultConnectionTimeout = 3
 	MaxRedirects             = 25
