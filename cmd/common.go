@@ -213,20 +213,6 @@ func findCookieInList(cookie *http.Cookie, list []*http.Cookie) bool {
 	return false
 }
 
-// func getIssuer(peers []*x509.Certificate) (*x509.Certificate, bool) {
-// 	var issuer *x509.Certificate
-// 	var found bool
-
-// 	pl := len(peers)
-
-// 	if pl > 1 {
-// 		found = true
-// 		issuer = peers[pl-1]
-// 	}
-
-// 	return issuer, found
-// }
-
 // =================================== HTTP Request Functions ==================================
 func initClient(cs *ConnectionSetup) *http.Client {
 	var rdf func(req *http.Request, via []*http.Request) error
