@@ -73,7 +73,7 @@ func ExecCertificate(cmd *cobra.Command, args []string) {
 
 	for _, rawURL := range args {
 		newReq := req
-		newReq.url, err = checkURL(rawURL)
+		newReq.url, err = checkURL(rawURL, true)
 		check(err, ErrNoURL)
 
 		// handle the request(s)

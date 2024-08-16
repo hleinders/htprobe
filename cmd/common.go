@@ -376,13 +376,17 @@ func noFollow(wr *WebRequest, cs *ConnectionSetup) ([]WebRequestResult, error) {
 	return resultList, err
 }
 
-func checkURL(rawURL string) (url.URL, error) {
+func checkURL(rawURL string, useSSL bool) (url.URL, error) {
+	proto := "http://"
+	if useSSL {
+		proto = "https://"
+	}
 
 	// has arg a protocol?
 	rx := regexp.MustCompile(`(?i)^https?://`)
 	if !rx.Match([]byte(rawURL)) {
 		pr.Debug("Added protocol prefix to %s.\n", rawURL)
-		rawURL = "http://" + rawURL
+		rawURL = proto + rawURL
 	}
 
 	// is arg an url?
