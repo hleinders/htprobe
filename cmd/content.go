@@ -30,7 +30,7 @@ var contentCmd = &cobra.Command{
 	Short:   contentShortDesc,
 	Long: makeHeader(lowerAppName+" content: "+contentShortDesc) + `With command 'content', the full response body
 	is shown. You may pass the '-f|--follow' flag to follow redirects.
-	In this case, the content of any hop is displayed with the '-a|--all' flag.
+	In this case, the content of any hop is displayed.
 
 	Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {

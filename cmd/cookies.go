@@ -29,7 +29,7 @@ var cookiesCmd = &cobra.Command{
 	Short:   cookieShortDesc,
 	Long: makeHeader(lowerAppName+" cookies: "+cookieShortDesc) + `With command 'cookies', all request and response cookies
 are shown. You may pass the '-f|--follow' flag to follow redirects.
-In this case, the cookies can be displayed in any hop with the '-a|--all' flag.
+In this case, the cookies are displayed in any hop.
 
 Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -41,10 +41,10 @@ func init() {
 	rootCmd.AddCommand(cookiesCmd)
 
 	// flags
-	cookiesCmd.Flags().BoolVarP(&cookieFlags.follow, "follow", "f", false, "show all response cookies")
+	cookiesCmd.Flags().BoolVarP(&cookieFlags.follow, "follow", "f", false, "show cookies for all hops")
 
 	// Parameter
-	cookiesCmd.Flags().StringSliceVarP(&cookieFlags.displaySingleCookie, "show-cookie", "S", nil, "show only cookie `FOOBAR`; ***")
+	cookiesCmd.Flags().StringSliceVarP(&cookieFlags.displaySingleCookie, "show-cookie", "D", nil, "show only cookie `FOOBAR`; ***")
 
 }
 
@@ -88,7 +88,7 @@ func ExecCookies(cmd *cobra.Command, args []string) {
 	}
 }
 
-func makeCookiesFromNames(cookieList []*http.Cookie, names []string) []*http.Cookie {
+func makeCookiesFromNames(names []string, cookieList []*http.Cookie) []*http.Cookie {
 	var cl []*http.Cookie
 
 	for _, c := range cookieList {
@@ -181,6 +181,6 @@ func ckHandleCookies(result WebRequestResult) {
 			chainPrintCookies(indentHeader, "", at.BulletChar, "Stored Cookies:", result.cookieLst)
 		}
 	} else {
-		chainPrintCookies(indentHeader, "", at.BulletChar, "Selected Cookies:", makeCookiesFromNames(result.cookieLst, cookieFlags.displaySingleCookie))
+		chainPrintCookies(indentHeader, "", at.BulletChar, "Selected Cookies:", makeCookiesFromNames(cookieFlags.displaySingleCookie, result.cookieLst))
 	}
 }

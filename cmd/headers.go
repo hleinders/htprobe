@@ -30,7 +30,7 @@ var headersCmd = &cobra.Command{
 	Short:   headerShortDesc,
 	Long: makeHeader(lowerAppName+" headers: "+headerShortDesc) + `With command 'headers', all request and response headers
 are shown. You may pass the '-f|--follow' flag to follow redirects.
-In this case, the headers can be displayed in any hop with the '-a|--all' flag.
+In this case, the headers are displayed in any hop.
 
 Flags marked with '***' may be used multiple times.`,
 	Run: func(cmd *cobra.Command, args []string) {
