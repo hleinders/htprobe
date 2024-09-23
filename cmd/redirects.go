@@ -46,7 +46,7 @@ func init() {
 	rootCmd.AddCommand(redirectsCmd)
 
 	// flags
-	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseCookies, "show-cookies", "c", false, "show response cookies")
+	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseCookies, "show-cookies", "d", false, "show response cookies")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseCert, "show-cert", "C", false, "show certificate(s)")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showResponseHeader, "response-headers", "H", false, "show response headers")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showRequestHeader, "request-headers", "R", false, "show request headers")
@@ -54,17 +54,20 @@ func init() {
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.showContent, "show-content", "O", false, "show content of last hop (prints to stderr)")
 	redirectsCmd.Flags().BoolVarP(&redirectFlags.allHops, "all", "a", false, "show all details")
 
-	// Parameter
+	// parameter
 	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleHeader, "display-header", "S", nil, "show only response header `FOOBAR`; ***")
 	redirectsCmd.Flags().StringSliceVarP(&redirectFlags.displaySingleCookie, "display-cookie", "D", nil, "show only response cookie `SNAFU`; ***")
-
-	// SingleHeader implies show ResponseHeaders:
-	redirectFlags.showResponseHeader = redirectFlags.showResponseHeader || redirectsCmd.Flags().Changed("header")
 }
 
 func ExecRedirects(cmd *cobra.Command, args []string) {
 	var hops []WebRequestResult
 	var err error
+
+	// singleHeader implies show ResponseHeaders:
+	redirectFlags.showResponseHeader = redirectFlags.showResponseHeader || len(redirectFlags.displaySingleHeader) > 0
+
+	// the same holds for cookies:
+	redirectFlags.showResponseCookies = redirectFlags.showResponseCookies || len(redirectFlags.displaySingleCookie) > 0
 
 	// create template request:
 	req := WebRequest{
@@ -169,10 +172,10 @@ func rdHandleHeaders(result WebRequestResult, showResponse bool) {
 
 	// Response cookies: May occour in all hops or only at last hop
 	if redirectFlags.showResponseCookies && showResponse {
-		if len(redirectFlags.displaySingleHeader) == 0 {
+		if len(redirectFlags.displaySingleCookie) == 0 {
 			chainPrintCookies(htab, vbar, at.BulletChar, "Stored Cookies:", result.cookieLst)
 		} else {
-			chainPrintCookies(htab, vbar, at.BulletChar, "Selected Cookies:", makeCookiesFromNames(result.cookieLst, cookieFlags.displaySingleCookie))
+			chainPrintCookies(htab, vbar, at.BulletChar, "Selected Cookies:", makeCookiesFromNames(redirectFlags.displaySingleCookie, result.cookieLst))
 		}
 	}
 }
