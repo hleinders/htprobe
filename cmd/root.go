@@ -117,7 +117,11 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 	htab = strings.Repeat(" ", 7)
 	indentHeader = strings.Repeat(" ", 2)
 	// rarrow = at.Harrow
-	rarrow = at.HeavyHarrow
+	// rarrow = at.HeavyHarrow
+	// rarrow = at.FrameHLine + ">"
+	// rarrow = at.FrameHLine + "⧐"
+	// rarrow = at.Bold("⟾")
+	rarrow = at.Bold("⟼")
 
 	// init printer
 	pr = cp.NewPrinter()
