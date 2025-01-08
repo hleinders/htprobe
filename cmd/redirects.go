@@ -163,8 +163,6 @@ func rdHandleHeaders(result WebRequestResult, showResponse bool) {
 	}
 
 	// Response Headers: May occour in all hops or only at last hop
-	fmt.Println("Showresponse: ", showResponse)
-
 	if redirectFlags.showResponseHeader && showResponse {
 		if len(redirectFlags.displaySingleHeader) == 0 {
 			chainPrintHeaders(htab, vbar, at.BulletChar, "Response Header:", result.response.Header)
