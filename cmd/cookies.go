@@ -73,12 +73,12 @@ func ExecCookies(cmd *cobra.Command, args []string) {
 		if cookieFlags.follow {
 			hops, err = follow(&newReq, &connSet)
 			if err != nil {
-				pr.Error(err.Error())
+				pr.Error("%s", err.Error())
 			}
 		} else {
 			hops, err = noFollow(&newReq, &connSet)
 			if err != nil {
-				pr.Error(err.Error())
+				pr.Error("%s", err.Error())
 			}
 
 		}

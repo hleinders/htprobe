@@ -89,7 +89,7 @@ func ExecRedirects(cmd *cobra.Command, args []string) {
 		// handle the request
 		hops, err = follow(&newReq, &connSet)
 		if err != nil {
-			pr.Error(err.Error())
+			pr.Error("%s", err.Error())
 		}
 
 		// display results
@@ -117,10 +117,11 @@ func prettyPrintChain(resultList []WebRequestResult) {
 
 	// handle first item:
 	fmt.Println()
+
 	first := resultList[0]
 	fmt.Println(first.PrettyPrintFirst())
 
-	rdHandleHeaders(first, redirectFlags.allHops)
+	rdHandleHeaders(first, redirectFlags.allHops || (numItem == 0))
 	rqHeaderDone = true
 	rqCookiesDone = true
 
@@ -162,6 +163,8 @@ func rdHandleHeaders(result WebRequestResult, showResponse bool) {
 	}
 
 	// Response Headers: May occour in all hops or only at last hop
+	fmt.Println("Showresponse: ", showResponse)
+
 	if redirectFlags.showResponseHeader && showResponse {
 		if len(redirectFlags.displaySingleHeader) == 0 {
 			chainPrintHeaders(htab, vbar, at.BulletChar, "Response Header:", result.response.Header)
