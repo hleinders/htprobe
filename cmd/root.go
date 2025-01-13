@@ -71,7 +71,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noColor, "no-color", false, "do not use colors")
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noFancy, "no-fancy", false, "combines no color and ascii mode")
 	rootCmd.PersistentFlags().BoolVarP(&connSet.trust, "trust", "t", false, "trust invalid certificates")
-	rootCmd.PersistentFlags().BoolVarP(&rootFlags.resolve, "resolve", "r", false, "resolve host names")
+	rootCmd.PersistentFlags().BoolVarP(&rootFlags.resolve, "show-ip", "i", false, "resolve host names to show IP(s)")
 	rootCmd.PersistentFlags().BoolVarP(&rootFlags.long, "long", "l", false, "long output, don't shorten results (header, cookies etc.)")
 	rootCmd.PersistentFlags().BoolVarP(&connSet.acceptCookies, "accept-cookies", "A", false, "accept response cookies")
 
