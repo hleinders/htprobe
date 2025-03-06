@@ -181,7 +181,7 @@ func getCookieFromString(raw string) (http.Cookie, error) {
 	var c http.Cookie
 	var err error
 
-	r := strings.SplitN(raw, ":", 2)
+	r := strings.SplitN(raw, globalCookieSep, 2)
 	if len(r) == 2 {
 		c = http.Cookie{Name: strings.TrimSpace(r[0]), Value: strings.TrimSpace(r[1])}
 	} else {
@@ -272,7 +272,7 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 	// Additional header
 	if len(wr.xhdrs) > 0 {
 		for _, s := range wr.xhdrs {
-			n, v := splitFirst(s, ":")
+			n, v := splitFirst(s, globalHeaderSep)
 			req.Header.Set(strings.TrimSpace(n), strings.TrimSpace(v))
 		}
 	}

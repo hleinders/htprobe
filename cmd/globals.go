@@ -33,7 +33,7 @@ const (
 
 const (
 	AppName                  = "HtProbe"
-	AppVersion               = "1.8 (2025-01-08)"
+	AppVersion               = "1.9 (2025-03-06)"
 	Author                   = "Harald Leinders <harald@leinders.de>"
 	DefaultConnectionTimeout = 3
 	MaxRedirects             = 25
@@ -131,6 +131,8 @@ var (
 	globalRequestBody string
 	globalHeaderList  []string
 	globalCookieLst   []*http.Cookie
+	globalHeaderSep   = ":"
+	globalCookieSep   = "="
 	hcont             string
 	corner            string
 	vbar              string

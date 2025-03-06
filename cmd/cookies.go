@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	at "github.com/hleinders/AnsiTerm"
@@ -15,6 +16,7 @@ import (
 type CookieFlags struct {
 	follow              bool
 	displaySingleCookie []string
+	SaveCookiesFName    string
 }
 
 var cookieFlags CookieFlags
@@ -45,7 +47,7 @@ func init() {
 
 	// Parameter
 	cookiesCmd.Flags().StringSliceVarP(&cookieFlags.displaySingleCookie, "show-cookie", "D", nil, "show only cookie `FOOBAR`; ***")
-
+	cookiesCmd.Flags().StringVarP(&cookieFlags.SaveCookiesFName, "save-cookies", "S", "", "save cookie(s) to `FName`; ***")
 }
 
 func ExecCookies(cmd *cobra.Command, args []string) {
@@ -85,6 +87,20 @@ func ExecCookies(cmd *cobra.Command, args []string) {
 
 		// display results
 		prettyPrintCookies(hops)
+
+		if cmd.Flags().Changed("save-cookies") {
+			lastHop := hops[len(hops)-1]
+			fmt.Printf("Save cookie list to %s: ", cookieFlags.SaveCookiesFName)
+			f, err := os.Create(cookieFlags.SaveCookiesFName)
+			check(err, ErrNoFile)
+			defer f.Close()
+
+			for _, c := range lastHop.cookieLst {
+				_, err = fmt.Fprintf(f, "%+v\n", c)
+				check(err, ErrFileIO)
+			}
+			fmt.Println("Done")
+		}
 	}
 }
 

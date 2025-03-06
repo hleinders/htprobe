@@ -83,11 +83,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&connSet.proxy, "proxy", "P", "", "set `host(:port)` as proxy")
 	rootCmd.PersistentFlags().IntVarP(&connTimeout, "timeout", "T", DefaultConnectionTimeout, "connection `time`out in seconds (0=disable, <=3600)")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.httpMethod, "method", "m", "GET", "http request `method` (see RFC 7231 section 4.3.)")
-	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.cookieValues, "rq-cookie", "q", nil, "set request cookie (fmt: `name:value`); ***")
-	rootCmd.PersistentFlags().StringVarP(&rootFlags.cookieFile, "rq-cookie-file", "Q", "", "read request cookies from `file` (fmt: lines of 'name:value')")
+	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.cookieValues, "rq-cookie", "q", nil, "set request cookie (fmt: `name"+globalCookieSep+"value`); ***")
+	rootCmd.PersistentFlags().StringVarP(&rootFlags.cookieFile, "rq-cookie-file", "Q", "", "read request cookies from `file` (fmt: lines of 'name"+globalCookieSep+"value')")
 	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.bodyValues, "rq-body", "b", nil, "add `entry` to request body where needed (e.g. POST); ***")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.bodyFile, "rq-body-file", "B", "", "read request body from `file`")
-	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.xtraHeaders, "rq-header", "x", nil, "pass extra `header` to request (fmt: 'Name: Value'); ***")
+	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.xtraHeaders, "rq-header", "x", nil, "pass extra `header` to request (fmt: 'name:value'); ***")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.headerFile, "rq-header-file", "X", "", "read extra request headers from `file` (fmt: lines of 'name:value')")
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -158,7 +158,7 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 		}
 	}
 	globalHeaderList = headerStringList
-	pr.Debug("Request headers from flags: \n%s\n", globalCookieLst)
+	pr.Debug("Request headers from flags: \n%s\n", globalHeaderList)
 
 	//
 	// Handle request cookies:
