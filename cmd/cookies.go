@@ -47,7 +47,7 @@ func init() {
 
 	// Parameter
 	cookiesCmd.Flags().StringSliceVarP(&cookieFlags.displaySingleCookie, "show-cookie", "D", nil, "show only cookie `FOOBAR`; ***")
-	cookiesCmd.Flags().StringVarP(&cookieFlags.SaveCookiesFName, "save-cookies", "S", "", "save cookie(s) to `FName`")
+	cookiesCmd.Flags().StringVarP(&cookieFlags.SaveCookiesFName, "save-cookies", "S", "", "save cookie(s) to `file`")
 }
 
 func ExecCookies(cmd *cobra.Command, args []string) {
