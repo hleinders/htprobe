@@ -33,7 +33,7 @@ const (
 
 const (
 	AppName                  = "HtProbe"
-	AppVersion               = "1.9 (2025-03-06)"
+	AppVersion               = "1.10 (2025-08-15)"
 	Author                   = "Harald Leinders <harald@leinders.de>"
 	DefaultConnectionTimeout = 3
 	MaxRedirects             = 25
@@ -124,7 +124,7 @@ var AllowedHttpMethods = []RequestMethod{
 
 var (
 	lowerAppName      = strings.ToLower(AppName)
-	agentString       = AppName + " Request Analyzer v" + AppVersion
+	agentString       = "Go-http-client/2.0 (" + AppName + " Request Analyzer v" + AppVersion + ")"
 	rqHeaderDone      = false
 	rqCookiesDone     = false
 	colorMode         = true

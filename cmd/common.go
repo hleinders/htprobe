@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+
 	"net/http"
 	"net/url"
 	"os"
@@ -262,7 +263,9 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 	if err != nil {
 		return result, err
 	}
-	req.Header.Set("User-Agent", wr.agent)
+	if len(wr.agent) != 0 {
+		req.Header.Set("User-Agent", wr.agent)
+	}
 
 	// reqLang?
 	if wr.lang != "" {
@@ -288,12 +291,12 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 		}
 	}
 
+	pr.Debug("Client:\n%+v\n", client)
 	pr.Debug("Request:\n%+v\n", req)
 	pr.Debug("Cookies:\n%+v\n", client.Jar)
 
 	// handle request
 	resp, errReq := client.Do(req)
-
 	if errReq == nil {
 		result.request = *req
 		result.response = *resp
@@ -307,6 +310,8 @@ func doRequest(client *http.Client, wr *WebRequest) (WebRequestResult, error) {
 		pr.Debug("Unwrapped error is: %s\n", reflect.TypeOf(te))
 		pr.Debug("Unwrapped error details: %+v\n", errors.Unwrap(te))
 	}
+
+	pr.Debug("Response:\n%+v\n", resp)
 
 	// check if cookie went to jar:
 	for _, c := range result.cookieLst {
