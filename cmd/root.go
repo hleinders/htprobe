@@ -233,6 +233,19 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 		os.Exit(ErrNoMethod)
 	}
 
+	// create golbal request template:
+	// create template request:
+	globalRequestTemplate = WebRequest{
+		agent:     rootFlags.agent,
+		lang:      rootFlags.reqLang,
+		method:    rootFlags.httpMethod,
+		authUser:  rootFlags.authUser,
+		authPass:  rootFlags.authPass,
+		reqBody:   globalRequestBody,
+		xhdrs:     globalHeaderList,
+		cookieLst: globalCookieLst,
+	}
+
 	//
 	// detect screen width:
 	screenWidth, _, err = at.GetSize()

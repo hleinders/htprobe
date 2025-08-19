@@ -69,27 +69,16 @@ func ExecRedirects(cmd *cobra.Command, args []string) {
 	// the same holds for cookies:
 	redirectFlags.showResponseCookies = redirectFlags.showResponseCookies || len(redirectFlags.displaySingleCookie) > 0
 
-	// create template request:
-	req := WebRequest{
-		agent:     rootFlags.agent,
-		lang:      rootFlags.reqLang,
-		method:    rootFlags.httpMethod,
-		authUser:  rootFlags.authUser,
-		authPass:  rootFlags.authPass,
-		reqBody:   globalRequestBody,
-		xhdrs:     globalHeaderList,
-		cookieLst: globalCookieLst,
-	}
-
 	for _, rawURL := range args {
-		newReq := req
+		newReq := globalRequestTemplate
 		newReq.url, err = checkURL(rawURL, false)
 		check(err, ErrNoURL)
 
-		// handle the request
-		hops, err = follow(&newReq, &connSet)
+		// handle the request(s)
+		hops, err = getHops(newReq, true)
 		if err != nil {
 			pr.Error("%s", err.Error())
+			continue
 		}
 
 		// display results

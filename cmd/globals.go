@@ -33,7 +33,7 @@ const (
 
 const (
 	AppName                  = "HtProbe"
-	AppVersion               = "1.10 (2025-08-15)"
+	AppVersion               = "1.12 (2025-08-19)"
 	Author                   = "Harald Leinders <harald@leinders.de>"
 	DefaultConnectionTimeout = 3
 	MaxRedirects             = 25
@@ -123,21 +123,22 @@ var AllowedHttpMethods = []RequestMethod{
 }
 
 var (
-	lowerAppName      = strings.ToLower(AppName)
-	agentString       = "Go-http-client/2.0 (" + AppName + " Request Analyzer v" + AppVersion + ")"
-	rqHeaderDone      = false
-	rqCookiesDone     = false
-	colorMode         = true
-	globalRequestBody string
-	globalHeaderList  []string
-	globalCookieLst   []*http.Cookie
-	globalHeaderSep   = ":"
-	globalCookieSep   = "="
-	hcont             string
-	corner            string
-	vbar              string
-	htab              string
-	indentHeader      string
-	rarrow            string
-	screenWidth       int
+	lowerAppName          = strings.ToLower(AppName)
+	agentString           = "Go-http-client/2.0 (" + AppName + " Request Analyzer v" + AppVersion + ")"
+	rqHeaderDone          = false
+	rqCookiesDone         = false
+	colorMode             = true
+	globalRequestBody     string
+	globalRequestTemplate = WebRequest{}
+	globalHeaderList      []string
+	globalCookieLst       []*http.Cookie
+	globalHeaderSep       = ":"
+	globalCookieSep       = "="
+	hcont                 string
+	corner                string
+	vbar                  string
+	htab                  string
+	indentHeader          string
+	rarrow                string
+	screenWidth           int
 )

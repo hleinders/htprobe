@@ -55,34 +55,42 @@ func ExecCookies(cmd *cobra.Command, args []string) {
 	var err error
 
 	// create template request:
-	req := WebRequest{
-		agent:     rootFlags.agent,
-		lang:      rootFlags.reqLang,
-		method:    rootFlags.httpMethod,
-		authUser:  rootFlags.authUser,
-		authPass:  rootFlags.authPass,
-		reqBody:   globalRequestBody,
-		xhdrs:     globalHeaderList,
-		cookieLst: globalCookieLst,
-	}
-
+	/* 	req := WebRequest{
+	   		agent:     rootFlags.agent,
+	   		lang:      rootFlags.reqLang,
+	   		method:    rootFlags.httpMethod,
+	   		authUser:  rootFlags.authUser,
+	   		authPass:  rootFlags.authPass,
+	   		reqBody:   globalRequestBody,
+	   		xhdrs:     globalHeaderList,
+	   		cookieLst: globalCookieLst,
+	   	}
+	*/
 	for _, rawURL := range args {
-		newReq := req
+		newReq := globalRequestTemplate
 		newReq.url, err = checkURL(rawURL, false)
 		check(err, ErrNoURL)
 
 		// handle the request(s)
-		if cookieFlags.follow {
-			hops, err = follow(&newReq, &connSet)
-			if err != nil {
-				pr.Error("%s", err.Error())
-			}
-		} else {
-			hops, err = noFollow(&newReq, &connSet)
-			if err != nil {
-				pr.Error("%s", err.Error())
-			}
+		/* 		if cookieFlags.follow {
+		   			hops, err = follow(&newReq, &connSet)
+		   			if err != nil {
+		   				pr.Error("%s", err.Error())
+		   			}
+		   		} else {
+		   			hops, err = noFollow(&newReq, &connSet)
+		   			if err != nil {
+		   				pr.Error("%s", err.Error())
+		   			}
 
+		   		}
+		*/
+
+		// handle the request(s)
+		hops, err = getHops(newReq, cookieFlags.follow)
+		if err != nil {
+			pr.Error("%s", err.Error())
+			continue
 		}
 
 		// display results

@@ -400,3 +400,17 @@ func checkURL(rawURL string, useSSL bool) (url.URL, error) {
 	u, e := url.ParseRequestURI(rawURL)
 	return *u, e
 }
+
+func getHops(req WebRequest, doFollow bool) ([]WebRequestResult, error) {
+	var hops []WebRequestResult
+	var err error
+
+	// handle the request(s)
+	if doFollow {
+		hops, err = follow(&req, &connSet)
+	} else {
+		hops, err = noFollow(&req, &connSet)
+	}
+
+	return hops, err
+}
