@@ -128,6 +128,7 @@ var (
 	rqHeaderDone          = false
 	rqCookiesDone         = false
 	colorMode             = true
+	globalConnSet         ConnectionSetup
 	globalRequestBody     string
 	globalRequestTemplate = WebRequest{}
 	globalHeaderList      []string

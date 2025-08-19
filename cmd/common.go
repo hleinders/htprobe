@@ -407,9 +407,9 @@ func getHops(req WebRequest, doFollow bool) ([]WebRequestResult, error) {
 
 	// handle the request(s)
 	if doFollow {
-		hops, err = follow(&req, &connSet)
+		hops, err = follow(&req, &globalConnSet)
 	} else {
-		hops, err = noFollow(&req, &connSet)
+		hops, err = noFollow(&req, &globalConnSet)
 	}
 
 	return hops, err

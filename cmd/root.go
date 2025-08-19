@@ -32,7 +32,6 @@ type RootFlags struct {
 var (
 	rootFlags   RootFlags
 	pr          *cp.Printer
-	connSet     ConnectionSetup
 	connTimeout int
 )
 
@@ -70,17 +69,17 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.ascii, "ascii", false, "use ascii chars only")
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noColor, "no-color", false, "do not use colors")
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noFancy, "no-fancy", false, "combines no color and ascii mode")
-	rootCmd.PersistentFlags().BoolVarP(&connSet.trust, "trust", "t", false, "trust invalid certificates")
+	rootCmd.PersistentFlags().BoolVarP(&globalConnSet.trust, "trust", "t", false, "trust invalid certificates")
 	rootCmd.PersistentFlags().BoolVarP(&rootFlags.resolve, "show-ip", "i", false, "resolve host names to show IP(s)")
 	rootCmd.PersistentFlags().BoolVarP(&rootFlags.long, "long", "l", false, "long output, don't shorten results (header, cookies etc.)")
-	rootCmd.PersistentFlags().BoolVarP(&connSet.acceptCookies, "accept-cookies", "A", false, "accept response cookies")
+	rootCmd.PersistentFlags().BoolVarP(&globalConnSet.acceptCookies, "accept-cookies", "A", false, "accept response cookies")
 
 	// Parameter
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.authUser, "user", "u", "", "`user` (basic auth)")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.authPass, "pass", "p", "", "`password` (basic auth)")
 	rootCmd.PersistentFlags().StringVar(&rootFlags.agent, "agent", agentString, "user agent")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.reqLang, "lang", "L", "", "set `language` header for request")
-	rootCmd.PersistentFlags().StringVarP(&connSet.proxy, "proxy", "P", "", "set `host(:port)` as proxy")
+	rootCmd.PersistentFlags().StringVarP(&globalConnSet.proxy, "proxy", "P", "", "set `host(:port)` as proxy")
 	rootCmd.PersistentFlags().IntVarP(&connTimeout, "timeout", "T", DefaultConnectionTimeout, "connection `time`out in seconds (0=disable, <=3600)")
 	rootCmd.PersistentFlags().StringVarP(&rootFlags.httpMethod, "method", "m", "GET", "http request `method` (see RFC 7231 section 4.3.)")
 	rootCmd.PersistentFlags().StringSliceVarP(&rootFlags.cookieValues, "rq-cookie", "q", nil, "set request cookie (fmt: `name"+globalCookieSep+"value`); ***")
@@ -128,10 +127,10 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 	pr.SetVerbose(rootFlags.verbose)
 	pr.SetDebug(rootFlags.debug)
 
-	connSet.timeOut, err = time.ParseDuration(fmt.Sprintf("%ds", connTimeout))
+	globalConnSet.timeOut, err = time.ParseDuration(fmt.Sprintf("%ds", connTimeout))
 	check(err, ErrTimeFmt)
-	if connSet.acceptCookies {
-		connSet.cookieJar, err = cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	if globalConnSet.acceptCookies {
+		globalConnSet.cookieJar, err = cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 		check(err, ErrCookieJar)
 	}
 

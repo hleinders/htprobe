@@ -236,7 +236,7 @@ func displayCertificates(indent, frameChar, mark, titleMsg string, tls *tls.Conn
 			if len(peers) < 2 {
 				peerType = at.Red("incomplete")
 			}
-			if connSet.trust {
+			if globalConnSet.trust {
 				peerType = at.Yellow("trust forced")
 			}
 			if c0.isCA {
