@@ -382,6 +382,9 @@ func noFollow(wr *WebRequest, cs *ConnectionSetup) ([]WebRequestResult, error) {
 }
 
 func checkURL(rawURL string, useSSL bool) (url.URL, error) {
+	var u *url.URL
+	var e error
+
 	proto := "http://"
 	if useSSL {
 		proto = "https://"
@@ -397,7 +400,9 @@ func checkURL(rawURL string, useSSL bool) (url.URL, error) {
 	// is arg an url?
 	pr.Debug("Raw URL: %s\n", rawURL)
 
-	u, e := url.ParseRequestURI(rawURL)
+	if u, e = url.ParseRequestURI(rawURL); u == nil {
+		return url.URL{}, fmt.Errorf("not a valid url: %s", rawURL)
+	}
 	return *u, e
 }
 
