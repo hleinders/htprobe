@@ -25,3 +25,5 @@ htprobe
 Old/
 build/
 Internal/
+
+.vscode/
