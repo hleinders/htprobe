@@ -52,7 +52,7 @@ func init() {
 
 	// flags
 	certificateCmd.Flags().BoolVarP(&certificateFlags.follow, "follow", "f", false, "show response cookies for all hops")
-	certificateCmd.Flags().BoolVarP(&certificateFlags.showDetails, "show-details", "s", false, "show certificate details")
+	certificateCmd.Flags().BoolVarP(&certificateFlags.showDetails, "all-details", "a", false, "show certificate details")
 	certificateCmd.Flags().BoolVarP(&certificateFlags.showValidatedChain, "validated-chain", "V", false, "display client side verified certificate chain")
 }
 
