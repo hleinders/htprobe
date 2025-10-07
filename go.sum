@@ -1,10 +1,8 @@
 github.com/cpuguy83/go-md2man/v2 v2.0.6/go.mod h1:oOW0eioCTA6cOiMLiUPZOpcVxMig6NIQQ7OS05n1F4g=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
 github.com/fatih/color v1.18.0/go.mod h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=
-github.com/hleinders/AnsiTerm v1.0.3 h1:bunRdxSvVNtspNrybPPuezDJBDDIrvOAVImAyo0MQdA=
-github.com/hleinders/AnsiTerm v1.0.3/go.mod h1:/7ENrOheuWn5KJoheFwa5GaPeDh/+bOCLnSr7cYROX0=
-github.com/hleinders/AnsiTerm v1.0.4 h1:Z98hXiiMPtyumpDJJm4wQ6fUYeVU8ys4jqEVYi2W4SE=
-github.com/hleinders/AnsiTerm v1.0.4/go.mod h1:H0guslUEBGiso69M7WDrYEuaesuUeAz7LFOe04hVl3Y=
+github.com/hleinders/AnsiTerm v1.0.5 h1:qMp7phbaaXwvTwtfc0Kyzp049WGNGDyPrUqw/eyOpcI=
+github.com/hleinders/AnsiTerm v1.0.5/go.mod h1:H0guslUEBGiso69M7WDrYEuaesuUeAz7LFOe04hVl3Y=
 github.com/hleinders/colorprint v1.0.0 h1:sspaDPjyctDTom2QVEvudVxF74JsnQ2wgNHp9igVU8o=
 github.com/hleinders/colorprint v1.0.0/go.mod h1:HnHs76xDSSI7jBd2BKRgLQvO+SSsjxK/ifXSgCc12bU=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
