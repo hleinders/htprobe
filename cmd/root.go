@@ -107,6 +107,14 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 	// handle charset
 	if rootFlags.ascii {
 		at.AsciiChars()
+		rarrow = at.Bold("->")
+	} else {
+		// rarrow = at.Harrow
+		// rarrow = at.HeavyHarrow
+		// rarrow = at.FrameHLine + ">"
+		// rarrow = at.FrameHLine + "⧐"
+		// rarrow = at.Bold("⟾")
+		rarrow = at.Bold("⟼")
 	}
 
 	// set up fancy chars:
@@ -115,12 +123,6 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 	vbar = at.FrameVLine
 	htab = strings.Repeat(" ", 7)
 	indentHeader = strings.Repeat(" ", 2)
-	// rarrow = at.Harrow
-	// rarrow = at.HeavyHarrow
-	// rarrow = at.FrameHLine + ">"
-	// rarrow = at.FrameHLine + "⧐"
-	// rarrow = at.Bold("⟾")
-	rarrow = at.Bold("⟼")
 
 	// init printer
 	pr = cp.NewPrinter()
