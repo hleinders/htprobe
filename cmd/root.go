@@ -225,8 +225,17 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 	// Handle method:
 	rootFlags.httpMethod = strings.ToUpper(rootFlags.httpMethod)
 	if !findInSlice(getMethodNames(), rootFlags.httpMethod) {
+		// method doesn't exist
 		fmt.Printf(at.Bold(at.Yellow("\nUnknown http method: %s.\n")), rootFlags.httpMethod)
 		fmt.Printf("Must be one of: %s\n\n", strings.Join(getMethodNames(), ", "))
+
+		cmd.Root().Usage()
+		fmt.Println()
+
+		os.Exit(ErrNoMethod)
+	} else if methodNeedsBody(rootFlags.httpMethod) && len(bodyList) == 0 {
+		// method exists, but does need a body
+		fmt.Printf(at.Bold(at.Yellow("\nHttp method needs body: %s.\n")), rootFlags.httpMethod)
 
 		cmd.Root().Usage()
 		fmt.Println()
