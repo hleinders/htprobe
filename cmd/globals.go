@@ -51,6 +51,7 @@ type ConnectionSetup struct {
 	trust         bool
 	follow        bool
 	acceptCookies bool
+	noHTTP2       bool
 	cookieJar     *cookiejar.Jar
 }
 
@@ -91,7 +92,7 @@ func (r WebRequestResult) GetRequest() string {
 }
 
 func (r WebRequestResult) PrettyPrintFirst() string {
-	return fmt.Sprintf(at.Bold("URL: %s  [%s]"), r.GetRequest(), r.request.Method)
+	return fmt.Sprintf(at.Bold("URL: %s  [%s: %s]"), r.GetRequest(), r.request.Method, r.response.Proto)
 }
 
 func (r WebRequestResult) PrettyPrintRedir(num int) string {
@@ -103,7 +104,7 @@ func (r WebRequestResult) PrettyPrintRedir(num int) string {
 }
 
 func (r WebRequestResult) PrettyPrintNormal(lastStatusCode int) string {
-	return fmt.Sprintf("%s%s (%s) %s  [%s] %s", htab, hcont, colorStatus(lastStatusCode), rarrow, r.request.Method, r.GetRequest())
+	return fmt.Sprintf("%s%s (%s) %s  [%s: %s] %s", htab, hcont, colorStatus(lastStatusCode), rarrow, r.request.Method, r.response.Proto, r.GetRequest())
 }
 
 func (r WebRequestResult) PrettyPrintLast() string {

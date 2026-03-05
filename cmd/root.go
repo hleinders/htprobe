@@ -70,6 +70,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noColor, "no-color", false, "do not use colors")
 	rootCmd.PersistentFlags().BoolVar(&rootFlags.noFancy, "no-fancy", false, "combines no color and ascii mode")
 	rootCmd.PersistentFlags().BoolVarP(&globalConnSet.trust, "trust", "t", false, "trust invalid certificates")
+	rootCmd.PersistentFlags().BoolVar(&globalConnSet.noHTTP2, "skip-http2", false, "do not try HTTP/2")
 	rootCmd.PersistentFlags().BoolVarP(&rootFlags.resolve, "show-ip", "i", false, "resolve host names to show IP(s)")
 	rootCmd.PersistentFlags().BoolVarP(&rootFlags.long, "long", "l", false, "long output, don't shorten results (header, cookies etc.)")
 	rootCmd.PersistentFlags().BoolVarP(&globalConnSet.acceptCookies, "accept-cookies", "A", false, "accept response cookies")
@@ -112,9 +113,9 @@ func PersistentPreRun(cmd *cobra.Command, args []string) {
 		// rarrow = at.Harrow
 		// rarrow = at.HeavyHarrow
 		// rarrow = at.FrameHLine + ">"
-		// rarrow = at.FrameHLine + "⧐"
+		rarrow = at.FrameHLine + "⧐"
 		// rarrow = at.Bold("⟾")
-		rarrow = at.Bold("⟼")
+		// rarrow = at.Bold("⟼")
 	}
 
 	// set up fancy chars:

@@ -220,6 +220,10 @@ func initClient(cs *ConnectionSetup) *http.Client {
 
 	tr := &http.Transport{}
 
+	if !cs.noHTTP2 {
+		tr.ForceAttemptHTTP2 = true
+	}
+
 	if cs.trust {
 		tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
