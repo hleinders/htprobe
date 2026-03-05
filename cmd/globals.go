@@ -100,7 +100,7 @@ func (r WebRequestResult) PrettyPrintRedir(num int) string {
 		return r.PrettyPrintFirst()
 	}
 
-	return at.Yellow("Redirect to: ") + fmt.Sprintf(at.Bold("%s  [%s]"), r.GetRequest(), r.request.Method)
+	return at.Yellow("Redirect to: ") + fmt.Sprintf(at.Bold("%s  [%s: %s]"), r.GetRequest(), r.request.Method, r.response.Proto)
 }
 
 func (r WebRequestResult) PrettyPrintNormal(lastStatusCode int) string {
