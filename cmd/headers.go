@@ -5,7 +5,9 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 
@@ -15,6 +17,7 @@ import (
 
 type HeaderFlags struct {
 	follow              bool
+	showContent         bool
 	displaySingleHeader []string
 }
 
@@ -43,6 +46,7 @@ func init() {
 
 	// flags
 	headersCmd.Flags().BoolVarP(&headerFlags.follow, "follow", "f", false, "show headers for all hops")
+	headersCmd.Flags().BoolVarP(&headerFlags.showContent, "show-content", "O", false, "show content of last hop (prints to stderr)")
 
 	// Parameter
 	headersCmd.Flags().StringSliceVarP(&headerFlags.displaySingleHeader, "show-header", "S", nil, "show only response header `FOOBAR`; ***")
@@ -66,6 +70,20 @@ func ExecHeaders(cmd *cobra.Command, args []string) {
 
 		// display results
 		prettyPrintHeaders(hops)
+
+		if headerFlags.showContent {
+			lastHop := hops[len(hops)-1]
+			body, err := io.ReadAll(lastHop.response.Body)
+			if err != nil {
+				pr.Errorln("%s", err)
+			} else {
+				fmt.Fprintln(os.Stderr)
+				fmt.Fprintln(os.Stderr, at.Bold("Content:"))
+				fmt.Fprintln(os.Stderr, at.Bold(strings.Repeat(at.FrameOHLine, 8)))
+				fmt.Fprintf(os.Stderr, "\n%+v\n", string(body))
+			}
+		}
+
 	}
 }
 
